@@ -240,11 +240,9 @@
     @keyframes pulseGreen {
       0%, 100% {
         box-shadow: 0 0 20px #00ff00, inset 0 0 10px rgba(0, 255, 0, 0.2);
-        transform: scale(1);
       }
       50% {
         box-shadow: 0 0 40px #00ff00, inset 0 0 20px rgba(0, 255, 0, 0.3);
-        transform: scale(1.05);
       }
     }
 
@@ -269,7 +267,6 @@
       background: #00ff00;
       color: #000;
       box-shadow: 0 0 50px #00ff00, inset 0 0 20px rgba(0, 0, 0, 0.3);
-      transform: scale(1.1);
       animation: none;
     }
 
@@ -284,11 +281,9 @@
     @keyframes pulseRed {
       0%, 100% {
         box-shadow: 0 0 20px #ff0000, inset 0 0 10px rgba(255, 0, 0, 0.2);
-        transform: scale(1);
       }
       50% {
         box-shadow: 0 0 40px #ff0000, inset 0 0 20px rgba(255, 0, 0, 0.3);
-        transform: scale(1.05);
       }
     }
 
@@ -309,12 +304,11 @@
       background: #ff0000;
       color: #fff;
       box-shadow: 0 0 50px #ff0000, inset 0 0 20px rgba(0, 0, 0, 0.3);
-      transform: scale(1.1);
       animation: none;
     }
 
     .btn-buy:active, .btn-sell:active {
-      transform: scale(0.95);
+      opacity: 0.9;
     }
 
     /* Scroll indicator */
@@ -728,24 +722,28 @@
         font-size: 14px;
       }
       
-      /* 停用複雜動畫以提升性能 */
+      /* 停用複雜動畫以提升性能 - 只保留光暈效果 */
       @keyframes pulseGreen {
         0%, 100% { 
-          transform: none;
           box-shadow: 0 0 10px #00ff00;
+        }
+        50% {
+          box-shadow: 0 0 20px #00ff00;
         }
       }
       
       @keyframes pulseRed {
         0%, 100% { 
-          transform: none;
           box-shadow: 0 0 10px #ff0000;
+        }
+        50% {
+          box-shadow: 0 0 20px #ff0000;
         }
       }
       
-      /* 調整按鈕 hover 效果 */
+      /* 調整按鈕 hover 效果 - 移除縮放 */
       .btn-buy:hover, .btn-sell:hover {
-        transform: scale(1.02);
+        opacity: 1;
       }
     }
     
@@ -1070,8 +1068,8 @@
 
     // Audio System
     let audioContext = null;
-    let backgroundOscillator = null;
-    let backgroundGain = null;
+    let backgroundOscillator = null; // Keep for fallback music
+    let backgroundGain = null; // Keep for fallback music
     let isMuted = false;
     let isAudioInitialized = false;
 
@@ -1081,15 +1079,58 @@
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
       isAudioInitialized = true;
       
-      // Create background music
-      createBackgroundMusic();
+      // Initialize MOD player instead of generated music
+      initModPlayer();
     }
 
-    // Global music system variables
-    let currentSongIndex = 0;
-    let musicIntervals = [];
-    let musicOscillators = [];
-    
+    // Initialize MOD music player using simple audio element
+    function initModPlayer() {
+      // Create audio element for MOD music
+      const audio = document.createElement('audio');
+      audio.loop = true;
+      audio.volume = 0.3;
+      
+      // MOD Archive provides streaming URLs - using the one you specified
+      // Module ID 81398 - direct streaming URL
+      audio.src = 'https://modarchive.org/jsplayer.php?moduleid=81398';
+      
+      // Alternative: Use the direct download URL (might have CORS issues)
+      // audio.src = 'https://api.modarchive.org/downloads.php?moduleid=81398';
+      
+      // Store audio element globally
+      window.modAudio = audio;
+      
+      // Play function
+      window.playModMusic = function() {
+        if (audio && !isMuted) {
+          audio.play().catch(e => {
+            console.log('Failed to play MOD music, falling back to generated music');
+            createBackgroundMusic();
+          });
+        }
+      };
+      
+      // Stop function
+      window.stopModMusic = function() {
+        if (audio) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+      };
+      
+      // Auto-play if not muted
+      if (!isMuted) {
+        window.playModMusic();
+      }
+      
+      // Handle audio errors
+      audio.onerror = function() {
+        console.log('MOD music failed to load, using generated music as fallback');
+        createBackgroundMusic();
+      };
+    }
+
+    // Fallback: Generated 8-bit music (keeping as backup)
     function createBackgroundMusic() {
       // Three different 8-bit chiptune songs
       const songs = [
@@ -1830,13 +1871,26 @@
       isMuted = !isMuted;
       const btn = document.querySelector('.music-btn');
       
-      if (backgroundGain) {
-        if (isMuted) {
+      if (isMuted) {
+        btn.textContent = '🔇';
+        // Mute MOD audio
+        if (window.modAudio) {
+          window.modAudio.volume = 0;
+        }
+        // Stop generated music if playing
+        if (backgroundGain) {
           backgroundGain.gain.setValueAtTime(0, audioContext.currentTime);
-          btn.textContent = '🔇';
-        } else {
+        }
+      } else {
+        btn.textContent = '🔊';
+        // Unmute MOD audio
+        if (window.modAudio) {
+          window.modAudio.volume = 0.3;
+          window.modAudio.play().catch(e => console.log('Audio play failed'));
+        }
+        // Resume generated music if playing
+        if (backgroundGain) {
           backgroundGain.gain.setValueAtTime(0.02, audioContext.currentTime);
-          btn.textContent = '🔊';
         }
       }
     });
