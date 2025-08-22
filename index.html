@@ -890,10 +890,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   
   <script>
-    // [JavaScript code remains unchanged - too long to display fully, but retains original functionality]
-    // This contains all original JavaScript code
-    // Including 3D Matrix effects, typing effects, audio system, trading charts, etc.
-    
     // Check if mobile device to optimize performance
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
@@ -1102,6 +1098,14 @@
         console.log('Autoplay supported:', canAutoplay);
         if (canAutoplay) {
           window.userHasInteracted = true; // Desktop browsers typically allow autoplay
+          // Also ensure audioContext is ready for typing sounds on desktop
+          if (audioContext && audioContext.state === 'suspended') {
+            audioContext.resume().then(() => {
+              console.log('AudioContext resumed for desktop autoplay');
+            }).catch(err => {
+              console.log('Desktop audioContext resume failed:', err);
+            });
+          }
         }
         initModPlayer();
       });
@@ -1153,17 +1157,17 @@
           window.scWidgetReady = true;
           
           // Only play if user has already interacted with the page
-          if (window.userHasInteracted) {
-            if (!isMuted) {
-              setTimeout(() => {
-                widget.play().then(() => {
-                  console.log('Music started playing');
-                }).catch(error => {
-                  console.log('Initial play failed, will retry on next user interaction');
-                  window.pendingSoundCloudPlay = true;
-                });
-              }, 100);
-            }
+          if (window.userHasInteracted && !isMuted) {
+            console.log('Attempting to start SoundCloud playback');
+            setTimeout(() => {
+              widget.play().then(() => {
+                console.log('Music started playing');
+                window.pendingSoundCloudPlay = false;
+              }).catch(error => {
+                console.log('Initial play failed, will retry on next user interaction');
+                window.pendingSoundCloudPlay = true;
+              });
+            }, 100);
           } else {
             // Mark that we have pending music to play after user interaction
             window.pendingSoundCloudPlay = true;
@@ -1180,13 +1184,30 @@
       document.body.appendChild(script);
     }
 
-    // Placeholder for future use
-    // Music is handled by SoundCloud embed
-
     // Typing sound effect - realistic keyboard press
     function playTypingSound() {
-      if (!audioContext || isMuted || audioContext.state !== 'running') return;
-      
+      if (!audioContext || isMuted) return;
+
+      // If audioContext is suspended, try to resume it
+      if (audioContext.state === 'suspended') {
+        audioContext.resume().then(() => {
+          console.log('AudioContext resumed for typing sound');
+          // Retry the typing sound after successful resume
+          if (audioContext.state === 'running') {
+            playTypingSoundNow();
+          }
+        }).catch(err => {
+          console.log('Failed to resume audioContext for typing:', err);
+        });
+        return;
+      } else if (audioContext.state !== 'running') {
+        return;
+      }
+
+      playTypingSoundNow();
+    }
+
+    function playTypingSoundNow() {
       // Create white noise for key press
       const bufferSize = audioContext.sampleRate * 0.008; // 8ms
       const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
@@ -1394,7 +1415,7 @@
       { id: 'experience', text: '## Experience Highlights\n• 17+ years in Software Development\n• Senior Developer at BitoPro Crypto Exchange (2022-Present)\n  - Crypto Market Making Systems\n  - CFD Risk Hedging Strategies\n  - Grid Trading & Arbitrage Bots\n• Risk Manager at Phnom Penh Derivative Exchange (2017-2022)\n  - MT4/MT5 Administration & Risk Management\n  - Derivative Products Design\n• iOS Contractor for VoIP, Golf GPS, Wireless Storage Apps\n• Live Casino Gaming Systems Developer (5+ years)\n• Social Network Games Developer (Facebook Games)\n• Educational iPad Apps & Interactive Media', speed: 25 },
       { id: 'current', text: '## Current Projects\n→ Bluetooth Device Integration & AI Applications\n→ B2C Commercial Management Platform\n→ Trading Systems (Grid Trading, Arbitrage Bots)\n→ Crypto Market Making & Liquidity Provision', speed: 30 },
       { id: 'tradingChart', text: '', speed: 0, isChart: true },
-      { id: 'contact', text: '## Contact\n• BattleTag: DjFeu#3832\n• Email: mailto:magic.music@gmail.com\n• LINE: djfeu\n• LINE URL: https://line.me/ti/p/djfeu\n• Location: Taipei, Taiwan\n• Maps: https://maps.app.goo.gl/7jhT75hEEWpUEoKS8', speed: 40 },
+      { id: 'contact', text: '## Contact\n• BattleTag: DjFeu#3832\n• mailto:magic.music@gmail.com\n• LINE: djfeu\n• LINE URL: https://line.me/ti/p/djfeu\n• Location: Taipei, Taiwan\n• Maps: https://maps.app.goo.gl/7jhT75hEEWpUEoKS8', speed: 40 },
       { id: 'formula', text: '', speed: 0, isFormula: true }
     ];
 
@@ -1513,7 +1534,7 @@
         ctx.font = 'bold 20px Fira Code';
         ctx.shadowBlur = 20;
         ctx.shadowColor = '#00ff00';
-        ctx.fillText(`$${currentPrice}`, 10, 30);
+        ctx.fillText(`${currentPrice}`, 10, 30);
         
         // Draw trend indicator
         const trend = priceData[priceData.length - 1] > priceData[priceData.length - 10] ? '▲' : '▼';
