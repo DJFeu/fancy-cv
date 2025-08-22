@@ -113,6 +113,7 @@
       font-size: 18px; /* Increased for command visibility */
       line-height: 1.8;
       font-family: 'Fira Code', monospace;
+      position: relative;
     }
 
     h1.typed {
@@ -465,8 +466,10 @@
       background: #00ff00;
       margin-left: 3px;
       animation: blink 1s infinite;
-      vertical-align: text-bottom;
+      vertical-align: baseline;
       box-shadow: 0 0 10px #00ff00;
+      position: relative;
+      top: -2px;
     }
 
     @keyframes blink {
@@ -1237,21 +1240,30 @@
       
       function type() {
         if (i < text.length) {
-          // Check if we're at a URL
-          if (text.substring(i).startsWith('https://')) {
-            // Find the end of the URL
+          // Check if we're at a URL or email
+          if (text.substring(i).startsWith('https://') || text.substring(i).startsWith('mailto:')) {
+            // Find the end of the URL/email
             let urlEnd = text.indexOf(' ', i);
             if (urlEnd === -1) urlEnd = text.indexOf('\n', i);
             if (urlEnd === -1) urlEnd = text.length;
             
             const url = text.substring(i, urlEnd);
             const link = document.createElement('a');
-            link.href = url;
-            link.target = '_blank';
-            link.textContent = url;
+            
+            if (url.startsWith('mailto:')) {
+              // Email link
+              const email = url.replace('mailto:', '');
+              link.href = url;
+              link.textContent = email;
+            } else {
+              // Regular URL
+              link.href = url;
+              link.target = '_blank';
+              link.textContent = url;
+            }
             element.appendChild(link);
             
-            // Play typing sound for the whole URL
+            // Play typing sound for the whole URL/email
             playTypingSound();
             i = urlEnd;
           } else {
@@ -1365,7 +1377,7 @@
       { id: 'experience', text: '## Experience Highlights\n• 17+ years in Software Development\n• Senior Developer at BitoPro Crypto Exchange (2022-Present)\n  - Crypto Market Making Systems\n  - CFD Risk Hedging Strategies\n  - Grid Trading & Arbitrage Bots\n• Risk Manager at Phnom Penh Derivative Exchange (2017-2022)\n  - MT4/MT5 Administration & Risk Management\n  - Derivative Products Design\n• iOS Contractor for VoIP, Golf GPS, Wireless Storage Apps\n• Live Casino Gaming Systems Developer (5+ years)\n• Social Network Games Developer (Facebook Games)\n• Educational iPad Apps & Interactive Media', speed: 25 },
       { id: 'current', text: '## Current Projects\n→ Bluetooth Device Integration & AI Applications\n→ B2C Commercial Management Platform\n→ Trading Systems (Grid Trading, Arbitrage Bots)\n→ Crypto Market Making & Liquidity Provision', speed: 30 },
       { id: 'tradingChart', text: '', speed: 0, isChart: true },
-      { id: 'contact', text: '## Contact\n• BattleTag: DjFeu#3832\n• Email: magic.music@gmail.com\n• LINE: djfeu\n       https://line.me/ti/p/djfeu\n• Location: Taipei, Taiwan\n• Maps: https://maps.app.goo.gl/7jhT75hEEWpUEoKS8', speed: 40 },
+      { id: 'contact', text: '## Contact\n• BattleTag: DjFeu#3832\n• Email: mailto:magic.music@gmail.com\n• LINE: djfeu - https://line.me/ti/p/djfeu\n• Location: Taipei, Taiwan\n• Maps: https://maps.app.goo.gl/7jhT75hEEWpUEoKS8', speed: 40 },
       { id: 'formula', text: '', speed: 0, isFormula: true }
     ];
 
