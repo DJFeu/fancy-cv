@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Adam Hung - Interactive Resume</title>
+  <!-- Import geeky/hacker style fonts for enhanced terminal aesthetics -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Share+Tech+Mono&family=VT323&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -14,10 +18,12 @@
     html, body {
       width: 100%;
       height: 100%;
-      font-family: 'Courier New', monospace;
+      font-family: 'Fira Code', 'Space Mono', 'Courier New', monospace;
       background: #000;
       overflow-x: hidden;
       position: relative;
+      font-weight: 400;
+      letter-spacing: -0.5px;
     }
 
     /* 3D Matrix Background */
@@ -85,6 +91,8 @@
       font-size: 14px;
       color: #00ff00;
       text-shadow: 0 0 5px #00ff00;
+      font-family: 'Share Tech Mono', monospace;
+      letter-spacing: 1px;
     }
 
     /* Terminal Body */
@@ -111,8 +119,10 @@
       color: #00ffff;
       text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
       margin-bottom: 15px;
-      font-weight: bold;
-      letter-spacing: 2px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      font-family: 'Share Tech Mono', 'Fira Code', monospace;
+      text-transform: uppercase;
     }
 
     h2.typed {
@@ -120,26 +130,31 @@
       color: #ffff00;
       text-shadow: 0 0 10px #ffff00, 0 0 20px #ffff00;
       margin-bottom: 25px;
-      letter-spacing: 1px;
+      letter-spacing: 2px;
+      font-family: 'VT323', 'Fira Code', monospace;
+      font-weight: 400;
     }
 
     p.typed {
-      font-size: 16px;
+      font-size: 14px;
       color: #00ff00;
       line-height: 1.8;
       max-width: 100%;
       text-shadow: 0 0 3px #00ff00;
+      font-family: 'Fira Code', 'Space Mono', monospace;
+      font-weight: 300;
     }
 
     /* Skills and Experience sections */
     pre.typed {
-      font-family: 'Courier New', monospace;
-      font-size: 14px;
+      font-family: 'Fira Code', 'Space Mono', monospace;
+      font-size: 13px;
       color: #00ff00;
       line-height: 1.6;
       text-shadow: 0 0 3px #00ff00;
       white-space: pre-wrap;
       margin: 20px 0;
+      font-weight: 400;
     }
 
     .skills-section, .experience-section, .current-section {
@@ -195,14 +210,14 @@
       flex: 1;
       padding: 15px 30px;
       font-size: 18px;
-      font-weight: bold;
-      font-family: 'Courier New', monospace;
+      font-weight: 600;
+      font-family: 'Share Tech Mono', 'Fira Code', monospace;
       border: 2px solid;
       border-radius: 5px;
       cursor: pointer;
       transition: all 0.3s;
       text-transform: uppercase;
-      letter-spacing: 2px;
+      letter-spacing: 3px;
       position: relative;
       overflow: hidden;
     }
@@ -333,12 +348,13 @@
     }
 
     .formula-text {
-      font-size: 28px;
+      font-size: 32px;
       color: #ff0000;
       font-weight: bold;
-      font-family: 'Courier New', monospace;
+      font-family: 'VT323', 'Fira Code', monospace;
       animation: redPulse 1.5s infinite;
       display: block;
+      letter-spacing: 2px;
     }
 
     @keyframes redPulse {
@@ -1068,9 +1084,11 @@
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
       
-      // Initialize data
+      // Initialize data with more stable price range to prevent chart overflow
+      const basePrice = 100;
       for (let i = 0; i < 100; i++) {
-        priceData.push(100 + Math.random() * 50);
+        // Keep initial prices within +/- 10 from base price
+        priceData.push(basePrice + (Math.random() - 0.5) * 20);
         volumeData.push(Math.random() * 1000000);
       }
       
@@ -1087,14 +1105,31 @@
           ctx.stroke();
         }
         
-        // Update data (simulate price movement)
+        // Update data (simulate realistic price movement with constraints)
         priceData.shift();
-        priceData.push(priceData[priceData.length - 1] + (Math.random() - 0.3) * 2);
+        const lastPrice = priceData[priceData.length - 1];
+        const priceChange = (Math.random() - 0.48) * 1.5; // Slight downward bias to prevent runaway growth
+        let newPrice = lastPrice + priceChange;
+        
+        // Keep price within reasonable bounds (80-120) to prevent chart overflow
+        if (newPrice > 120) {
+          newPrice = 120 - Math.random() * 5; // Bounce back from ceiling
+        } else if (newPrice < 80) {
+          newPrice = 80 + Math.random() * 5; // Bounce back from floor
+        }
+        
+        priceData.push(newPrice);
         
         volumeData.shift();
         volumeData.push(Math.random() * 1000000);
         
-        // Draw price line
+        // Find min and max for dynamic Y-axis scaling
+        const minPrice = Math.min(...priceData);
+        const maxPrice = Math.max(...priceData);
+        const priceRange = maxPrice - minPrice || 1; // Prevent division by zero
+        const padding = 20; // Add padding to prevent line from touching edges
+        
+        // Draw price line with proper scaling
         ctx.strokeStyle = '#00ff00';
         ctx.lineWidth = 2;
         ctx.shadowBlur = 10;
@@ -1103,7 +1138,8 @@
         
         for (let i = 0; i < priceData.length; i++) {
           const x = (canvas.width / priceData.length) * i;
-          const y = canvas.height - ((priceData[i] - 50) / 100) * canvas.height;
+          // Scale price to fit in chart area (leave space for volume bars)
+          const y = padding + (1 - (priceData[i] - minPrice) / priceRange) * (canvas.height * 0.6 - padding * 2);
           
           if (i === 0) {
             ctx.moveTo(x, y);
@@ -1113,28 +1149,35 @@
         }
         ctx.stroke();
         
-        // Draw volume bars
+        // Draw volume bars at bottom with proper scaling
         ctx.fillStyle = 'rgba(0, 255, 0, 0.3)';
+        const maxVolume = Math.max(...volumeData);
         for (let i = 0; i < volumeData.length; i++) {
           const x = (canvas.width / volumeData.length) * i;
-          const height = (volumeData[i] / 1000000) * canvas.height * 0.3;
+          const height = (volumeData[i] / maxVolume) * canvas.height * 0.25; // Volume uses bottom 25% of chart
           ctx.fillRect(x, canvas.height - height, canvas.width / volumeData.length - 1, height);
         }
         
         // Draw current price
         const currentPrice = priceData[priceData.length - 1].toFixed(2);
         ctx.fillStyle = '#00ff00';
-        ctx.font = 'bold 20px Courier New';
+        ctx.font = 'bold 20px Fira Code';
         ctx.shadowBlur = 20;
         ctx.shadowColor = '#00ff00';
-        ctx.fillText(`${currentPrice}`, 10, 30);
+        ctx.fillText(`$${currentPrice}`, 10, 30);
         
         // Draw trend indicator
         const trend = priceData[priceData.length - 1] > priceData[priceData.length - 10] ? '▲' : '▼';
         const trendColor = trend === '▲' ? '#00ff00' : '#ff0000';
         ctx.fillStyle = trendColor;
-        ctx.font = 'bold 30px Arial';
+        ctx.font = 'bold 30px Share Tech Mono';
         ctx.fillText(trend, canvas.width - 50, 40);
+        
+        // Draw high/low price indicators for better readability
+        ctx.fillStyle = '#00ff00';
+        ctx.font = '12px Fira Code';
+        ctx.fillText(`H: ${maxPrice.toFixed(2)}`, 10, 50);
+        ctx.fillText(`L: ${minPrice.toFixed(2)}`, 10, 70);
         
         chartAnimationId = requestAnimationFrame(drawChart);
       }
