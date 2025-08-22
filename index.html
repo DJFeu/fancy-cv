@@ -1664,35 +1664,51 @@
 
     // Initialize everything
     window.addEventListener('load', () => {
+      console.log('Window loaded, starting initialization sequence');
       // Hide loading after animation
       setTimeout(() => {
         const loading = document.getElementById('loading');
-        loading.style.opacity = '0';
-        setTimeout(() => {
-          loading.style.display = 'none';
-          // Show start overlay
-          document.getElementById('startOverlay').style.display = 'flex';
-        }, 500);
+        if (loading) {
+          loading.style.opacity = '0';
+          setTimeout(() => {
+            loading.style.display = 'none';
+            // Show start overlay
+            const startOverlay = document.getElementById('startOverlay');
+            if (startOverlay) {
+              console.log('Showing start overlay');
+              startOverlay.style.display = 'flex';
+            } else {
+              console.error('Start overlay not found!');
+            }
+          }, 500);
+        } else {
+          console.error('Loading element not found!');
+        }
       }, 1500);
     });
 
-    // Start on click
-    document.getElementById('startOverlay').addEventListener('click', () => {
-      // Initialize audio
-      initAudioSystem();
-      if (audioContext) {
-        audioContext.resume();
+    // Start on click - Set up after DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+      const startOverlay = document.getElementById('startOverlay');
+      if (startOverlay) {
+        startOverlay.addEventListener('click', () => {
+          // Initialize audio
+          initAudioSystem();
+          if (audioContext) {
+            audioContext.resume();
+          }
+          
+          // Hide overlay
+          startOverlay.style.opacity = '0';
+          setTimeout(() => {
+            startOverlay.style.display = 'none';
+          }, 500);
+          
+          // Start typing animation and auto-scroll feature
+          startTypingSequence();
+          setTimeout(startAutoScroll, 2000); // Start auto-scroll after 2 seconds (desktop only)
+        });
       }
-      
-      // Hide overlay
-      document.getElementById('startOverlay').style.opacity = '0';
-      setTimeout(() => {
-        document.getElementById('startOverlay').style.display = 'none';
-      }, 500);
-      
-      // Start typing animation and auto-scroll feature
-      startTypingSequence();
-      setTimeout(startAutoScroll, 2000); // Start auto-scroll after 2 seconds (desktop only)
     });
 
     // Also allow clicking anywhere to start audio if not started
