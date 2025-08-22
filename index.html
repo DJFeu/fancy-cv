@@ -1063,7 +1063,7 @@
     let backgroundGain = null; // Keep for fallback music
     let isMuted = false;
     let isAudioInitialized = false;
-    let globalVolumeControl = 0.3; // Global volume control for all sounds
+    let globalVolumeControl = 1.0; // Global volume control for all sounds (1.0 = normal)
     
     // Check browser autoplay support
     async function checkAutoplaySupport() {
@@ -1126,9 +1126,8 @@
       iframe.setAttribute('loading', 'eager'); // Force eager loading for mobile
       iframe.setAttribute('importance', 'high'); // High priority loading
       // SoundCloud URL WITHOUT auto_play to comply with mobile browser policies
-      // Use different track for mobile (shorter, more compatible)
-      const trackId = isMobile ? '1069827123' : '238369911'; // Mobile: shorter track
-      iframe.src = `https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/${trackId}&color=%2300ff00&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false&single_active=false&show_artwork=false`;
+      // Use same track for all devices for consistency
+      iframe.src = 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/238369911&color=%2300ff00&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false&single_active=false&show_artwork=false';
       
       // Hide the iframe visually but keep audio
       // For mobile, we need to keep it slightly visible to ensure it loads
@@ -1156,67 +1155,20 @@
         
         widget.bind(SC.Widget.Events.READY, function() {
           console.log('SoundCloud widget ready');
-          // Set lower volume for mobile
-          const volume = isMobile ? 20 : 25;
+          // Set appropriate volume for each platform
+          const volume = isMobile ? 25 : 30;
           widget.setVolume(volume);
           
           // Mark widget as ready
           window.scWidgetReady = true;
           
-          // Special handling for mobile devices with improved detection
+          // Simplified mobile handling - don't try to autoplay on mobile
           if (isMobile) {
-            console.log('Mobile device detected - implementing mobile-specific audio strategy');
+            console.log('Mobile device detected - music will play after user interaction');
             window.pendingSoundCloudPlay = true;
             
-            // Mobile requires user gesture for audio playback
-            if (window.userHasInteracted && !isMuted) {
-              console.log('Mobile: User has interacted, attempting play with Web Audio API unlock');
-              
-              // First unlock Web Audio API on mobile
-              if (audioContext && audioContext.state === 'suspended') {
-                audioContext.resume().then(() => {
-                  console.log('Mobile: AudioContext unlocked');
-                  
-                  // Then try SoundCloud playback
-                  setTimeout(() => {
-                    widget.play().then(() => {
-                      console.log('Mobile: Music playback started successfully!');
-                      window.pendingSoundCloudPlay = false;
-                    }).catch(error => {
-                      console.log('Mobile: Initial play failed, setting up gesture handler', error);
-                      window.pendingSoundCloudPlay = true;
-                      
-                      // Setup touch/click handler for mobile
-                      const mobilePlayHandler = () => {
-                        if (window.pendingSoundCloudPlay && !isMuted) {
-                          widget.play().then(() => {
-                            console.log('Mobile: Gesture-triggered play successful!');
-                            window.pendingSoundCloudPlay = false;
-                            document.removeEventListener('touchstart', mobilePlayHandler);
-                            document.removeEventListener('click', mobilePlayHandler);
-                          }).catch(err => {
-                            console.log('Mobile: Gesture play failed:', err);
-                          });
-                        }
-                      };
-                      
-                      document.addEventListener('touchstart', mobilePlayHandler, { once: false });
-                      document.addEventListener('click', mobilePlayHandler, { once: false });
-                    });
-                  }, 1500); // Longer delay for mobile loading
-                }).catch(err => {
-                  console.log('Mobile: AudioContext resume failed:', err);
-                });
-              } else {
-                // AudioContext already running, try play directly
-                setTimeout(() => {
-                  widget.play().catch(error => {
-                    console.log('Mobile: Direct play failed:', error);
-                    window.pendingSoundCloudPlay = true;
-                  });
-                }, 1000);
-              }
-            }
+            // Don't attempt autoplay on mobile - wait for explicit user interaction
+            // The global interaction handlers will handle playback
           } else {
             // Desktop behavior
             if (window.userHasInteracted && !isMuted) {
@@ -1303,10 +1255,10 @@
       filter2.frequency.value = 5000;
       
       const gain = audioContext.createGain();
-      // Reduced volume for mobile compatibility
-      const baseVolume = isMobile ? 0.005 : 0.010;
-      gain.gain.setValueAtTime(baseVolume * globalVolumeControl, audioContext.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.008);
+      // Slightly reduced volume for mobile, normal for desktop
+      const baseVolume = isMobile ? 0.012 : 0.015;
+      gain.gain.setValueAtTime(baseVolume, audioContext.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.008);
       
       // Add click/thock sound
       const clickOsc = audioContext.createOscillator();
@@ -1315,10 +1267,10 @@
       clickOsc.type = 'sine';
       clickOsc.frequency.value = 800 + Math.random() * 200; // Vary frequency slightly
       
-      // Reduced click sound volume
-      const clickVolume = isMobile ? 0.008 : 0.015;
-      clickGain.gain.setValueAtTime(clickVolume * globalVolumeControl, audioContext.currentTime);
-      clickGain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.003);
+      // Slightly reduced click sound for mobile
+      const clickVolume = isMobile ? 0.015 : 0.02;
+      clickGain.gain.setValueAtTime(clickVolume, audioContext.currentTime);
+      clickGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.003);
       
       // Connect the nodes
       whiteNoise.connect(filter);
@@ -1756,9 +1708,9 @@
           coinOsc.type = 'sine';
           coinOsc.frequency.setValueAtTime(2093, audioContext.currentTime);
           coinOsc.frequency.exponentialRampToValueAtTime(4186, audioContext.currentTime + 0.1);
-          // Reduced coin sound volume
-          coinGain.gain.setValueAtTime(0.05 * globalVolumeControl, audioContext.currentTime);
-          coinGain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.2);
+          // Normal coin sound volume
+          coinGain.gain.setValueAtTime(isMobile ? 0.08 : 0.1, audioContext.currentTime);
+          coinGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
           coinOsc.connect(coinGain);
           coinGain.connect(audioContext.destination);
           coinOsc.start(audioContext.currentTime);
@@ -1789,9 +1741,9 @@
           errorOsc.type = 'sawtooth';
           errorOsc.frequency.setValueAtTime(200, audioContext.currentTime);
           errorOsc.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.2);
-          // Reduced error sound volume
-          errorGain.gain.setValueAtTime(0.05 * globalVolumeControl, audioContext.currentTime);
-          errorGain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.2);
+          // Normal error sound volume
+          errorGain.gain.setValueAtTime(isMobile ? 0.08 : 0.1, audioContext.currentTime);
+          errorGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
           errorOsc.connect(errorGain);
           errorGain.connect(audioContext.destination);
           errorOsc.start(audioContext.currentTime);
@@ -1884,83 +1836,30 @@
           if (window.pendingSoundCloudPlay && !isMuted) {
             console.log('Starting music playback attempt after user interaction');
             
-            // Enhanced retry mechanism with mobile-specific strategy
-            let retryCount = 0;
-            const maxRetries = isMobile ? 5 : 10; // Fewer retries for mobile (rely on gesture instead)
-            const retryDelay = isMobile ? 2000 : 500; // Longer initial delay for mobile
-            
+            // Simplified play mechanism
             function tryPlayMusic() {
-              if (window.scWidget) {
-                console.log(`Attempting to play music (attempt ${retryCount + 1}/${maxRetries})`);
+              if (window.scWidget && window.scWidgetReady) {
+                console.log('Attempting to play music...');
                 
-                // On mobile, ensure widget is fully ready
-                if (isMobile && !window.scWidgetReady) {
-                  console.log('Mobile: Widget not fully ready, waiting...');
-                  retryCount++;
-                  if (retryCount < maxRetries) {
-                    setTimeout(tryPlayMusic, retryDelay);
-                  }
-                  return;
-                }
-                
-                // Try to play with Promise handling
-                const playPromise = window.scWidget.play();
-                
-                if (playPromise && typeof playPromise.then === 'function') {
-                  playPromise.then(() => {
-                    console.log('Music playback started successfully!');
-                    window.pendingSoundCloudPlay = false;
-                  }).catch(error => {
-                    console.log(`Play attempt ${retryCount + 1} failed:`, error);
-                    retryCount++;
-                    
-                    // Keep retrying if we haven't exceeded max retries
-                    if (retryCount < maxRetries && window.pendingSoundCloudPlay) {
-                      setTimeout(tryPlayMusic, retryDelay);
-                    } else if (retryCount >= maxRetries) {
-                      console.log('Max retries reached. Music may not play automatically.');
-                      // On mobile, set up a fallback click handler
-                      if (isMobile) {
-                        console.log('Setting up fallback click handler for mobile');
-                        document.addEventListener('click', function fallbackPlay() {
-                          if (window.scWidget && window.pendingSoundCloudPlay) {
-                            window.scWidget.play().then(() => {
-                              console.log('Fallback play successful!');
-                              window.pendingSoundCloudPlay = false;
-                              document.removeEventListener('click', fallbackPlay);
-                            }).catch(err => {
-                              console.log('Fallback play failed:', err);
-                            });
-                          }
-                        }, { once: false });
-                      }
-                    }
-                  });
-                } else {
-                  // Fallback for older API
-                  console.log('Using fallback play method');
-                  window.scWidget.play();
-                  setTimeout(() => {
-                    window.pendingSoundCloudPlay = false;
-                  }, 100);
-                }
+                window.scWidget.play().then(() => {
+                  console.log('Music playback started successfully!');
+                  window.pendingSoundCloudPlay = false;
+                }).catch(error => {
+                  console.log('Play failed, will retry on next user interaction:', error);
+                  window.pendingSoundCloudPlay = true;
+                });
               } else {
-                // Widget not ready yet, retry
-                retryCount++;
-                if (retryCount < maxRetries && window.pendingSoundCloudPlay) {
-                  console.log('Widget not ready, retrying...');
-                  setTimeout(tryPlayMusic, retryDelay);
-                }
+                console.log('Widget not ready, will try on next interaction');
+                window.pendingSoundCloudPlay = true;
               }
             }
             
-            // Start trying to play music with initial delay for mobile
-            if (isMobile) {
-              console.log('Mobile: Waiting 2 seconds before first play attempt');
-              setTimeout(tryPlayMusic, 2000);
-            } else {
-              tryPlayMusic();
+            // For desktop, try immediately. For mobile, wait for user interaction
+            if (!isMobile) {
+              // Desktop can try autoplay
+              setTimeout(tryPlayMusic, 500);
             }
+            // Mobile will rely on the global interaction handler
           }
           
           // Hide overlay
@@ -1984,7 +1883,11 @@
     });
 
     // Global interaction handlers for audio initialization
-    const handleUserInteraction = () => {
+    const handleUserInteraction = (event) => {
+      // Prevent duplicate calls from touch + click
+      if (event && event.handled) return;
+      if (event) event.handled = true;
+      
       // Mark user interaction
       if (!window.userHasInteracted) {
         window.userHasInteracted = true;
@@ -2005,24 +1908,34 @@
         });
       }
       
-      // Try to play pending SoundCloud music
-      if (window.pendingSoundCloudPlay && window.scWidget && !isMuted) {
-        // Add small delay to ensure everything is ready
-        setTimeout(() => {
-          window.scWidget.play().then(() => {
-            console.log('Music started from user interaction!');
-            window.pendingSoundCloudPlay = false;
-          }).catch(error => {
-            console.log('Music play failed on interaction:', error);
-            // Don't reset pendingSoundCloudPlay, let it retry
-          });
-        }, isMobile ? 500 : 100);
+      // Try to play SoundCloud music - especially important for mobile
+      if (window.pendingSoundCloudPlay && window.scWidget && window.scWidgetReady && !isMuted) {
+        console.log('Attempting to start music from user interaction...');
+        
+        // Immediate attempt for better mobile compatibility
+        window.scWidget.play().then(() => {
+          console.log('Music started successfully from user interaction!');
+          window.pendingSoundCloudPlay = false;
+        }).catch(error => {
+          console.log('First play attempt failed:', error);
+          
+          // Retry with delay
+          setTimeout(() => {
+            window.scWidget.play().then(() => {
+              console.log('Music started on retry!');
+              window.pendingSoundCloudPlay = false;
+            }).catch(err => {
+              console.log('Retry also failed:', err);
+              // Keep pendingSoundCloudPlay true for next interaction
+            });
+          }, 200);
+        });
       }
     };
     
-    // Add listeners for both click and touch
+    // Add listeners for both click and touch events
     document.addEventListener('click', handleUserInteraction);
-    document.addEventListener('touchstart', handleUserInteraction, { passive: true });
+    document.addEventListener('touchend', handleUserInteraction); // Use touchend for better mobile compatibility
   </script>
 </body>
 </html>
