@@ -1122,16 +1122,19 @@
       iframe.scrolling = 'no';
       iframe.frameborder = 'no';
       iframe.allow = 'autoplay';
+      iframe.setAttribute('loading', 'eager'); // Force eager loading for mobile
+      iframe.setAttribute('importance', 'high'); // High priority loading
       // SoundCloud URL WITHOUT auto_play to comply with mobile browser policies
       iframe.src = 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/238369911&color=%2300ff00&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false&single_active=false&show_artwork=false';
       
       // Hide the iframe visually but keep audio
+      // For mobile, we need to keep it slightly visible to ensure it loads
       iframe.style.position = 'fixed';
       iframe.style.bottom = '-200px';
       iframe.style.left = '0';
-      iframe.style.width = '1px';
-      iframe.style.height = '1px';
-      iframe.style.opacity = '0';
+      iframe.style.width = '100px'; // Increased from 1px for mobile compatibility
+      iframe.style.height = '100px'; // Increased from 1px for mobile compatibility
+      iframe.style.opacity = '0.01'; // Slightly visible instead of 0
       iframe.style.pointerEvents = 'none';
       iframe.style.zIndex = '-9999';
       
@@ -1156,23 +1159,43 @@
           // Mark widget as ready
           window.scWidgetReady = true;
           
-          // Try to play if user has already interacted
-          if (window.userHasInteracted && !isMuted) {
-            console.log('Widget ready, attempting autoplay');
-            widget.play().then(() => {
-              console.log('Autoplay successful!');
-              window.pendingSoundCloudPlay = false;
-            }).catch(error => {
-              console.log('Autoplay blocked, will retry on next interaction');
-              window.pendingSoundCloudPlay = true;
-            });
-          } else {
-            // Mark that we have pending music to play after user interaction
+          // Special handling for mobile devices
+          if (isMobile) {
+            console.log('Mobile device detected - waiting for user interaction');
             window.pendingSoundCloudPlay = true;
-            console.log('Widget ready, waiting for user interaction');
+            
+            // On mobile, we need to be more aggressive with retrying
+            if (window.userHasInteracted && !isMuted) {
+              console.log('Mobile: User has interacted, attempting to play');
+              // Use a longer delay for mobile to ensure everything is loaded
+              setTimeout(() => {
+                widget.play().then(() => {
+                  console.log('Mobile: Music playback started!');
+                  window.pendingSoundCloudPlay = false;
+                }).catch(error => {
+                  console.log('Mobile: Play failed, will retry on next interaction', error);
+                  window.pendingSoundCloudPlay = true;
+                });
+              }, 1000);
+            }
+          } else {
+            // Desktop behavior
+            if (window.userHasInteracted && !isMuted) {
+              console.log('Desktop: Widget ready, attempting autoplay');
+              widget.play().then(() => {
+                console.log('Desktop: Autoplay successful!');
+                window.pendingSoundCloudPlay = false;
+              }).catch(error => {
+                console.log('Desktop: Autoplay blocked, will retry on next interaction');
+                window.pendingSoundCloudPlay = true;
+              });
+            } else {
+              window.pendingSoundCloudPlay = true;
+              console.log('Desktop: Widget ready, waiting for user interaction');
+            }
           }
           
-          // Also check if there's a pending play request
+          // Additional check for pending play request
           if (window.pendingSoundCloudPlay && window.userHasInteracted && !isMuted) {
             console.log('Processing pending play request');
             setTimeout(() => {
@@ -1182,7 +1205,7 @@
               }).catch(error => {
                 console.log('Pending play failed:', error);
               });
-            }, 200);
+            }, isMobile ? 1500 : 200);
           }
         });
         
@@ -1426,7 +1449,15 @@
       { id: 'experience', text: '## Experience Highlights\n• 17+ years in Software Development\n• Senior Developer at BitoPro Crypto Exchange (2022-Present)\n  - Crypto Market Making Systems\n  - CFD Risk Hedging Strategies\n  - Grid Trading & Arbitrage Bots\n• Risk Manager at Phnom Penh Derivative Exchange (2017-2022)\n  - MT4/MT5 Administration & Risk Management\n  - Derivative Products Design\n• iOS Contractor for VoIP, Golf GPS, Wireless Storage Apps\n• Live Casino Gaming Systems Developer (5+ years)\n• Social Network Games Developer (Facebook Games)\n• Educational iPad Apps & Interactive Media', speed: 25 },
       { id: 'current', text: '## Current Projects\n→ Bluetooth Device Integration & AI Applications\n→ B2C Commercial Management Platform\n→ Trading Systems (Grid Trading, Arbitrage Bots)\n→ Crypto Market Making & Liquidity Provision', speed: 30 },
       { id: 'tradingChart', text: '', speed: 0, isChart: true },
-      { id: 'contact', text: '## Contact\\n• BattleTag: DjFeu#3832\\n• Email: magic.music@gmail.com\\n• LINE: djfeu\\n• LINE URL: https://line.me/ti/p/djfeu\\n• Location: Taipei, Taiwan\\n• Maps: https://maps.app.goo.gl/7jhT75hEEWpUEoKS8', speed: 40 },
+      { id: 'contact', text: `## Contact
+      - **BattleTag**: DjFeu#3832  
+      - **Email**: [magic.music@gmail.com](mailto:magic.music@gmail.com)  
+      - **LINE**: djfeu  
+      - **LINE URL**: [Add Friend](https://line.me/ti/p/djfeu)  
+      - **Location**: Taipei, Taiwan  
+      - **Maps**: [View Map](https://maps.app.goo.gl/7jhT75hEEWpUEoKS8)`,
+        speed: 40,
+      },
       { id: 'formula', text: '', speed: 0, isFormula: true }
     ];
 
@@ -1743,9 +1774,29 @@
         }
       } else {
         btn.textContent = '🔊';
-        // Resume SoundCloud
+        // Resume SoundCloud with retry for mobile
         if (window.scWidget) {
-          window.scWidget.play();
+          const playAttempt = () => {
+            window.scWidget.play().then(() => {
+              console.log('Music resumed from mute button');
+              window.pendingSoundCloudPlay = false;
+            }).catch(error => {
+              console.log('Failed to resume music:', error);
+              // On mobile, retry after a short delay
+              if (isMobile) {
+                setTimeout(() => {
+                  window.scWidget.play().catch(err => {
+                    console.log('Retry failed:', err);
+                  });
+                }, 500);
+              }
+            });
+          };
+          
+          playAttempt();
+        } else if (window.pendingSoundCloudPlay) {
+          // If widget isn't ready yet, mark for playback
+          console.log('Widget not ready, marking for playback when ready');
         }
       }
     });
@@ -1793,37 +1844,83 @@
           if (window.pendingSoundCloudPlay && !isMuted) {
             console.log('Starting music playback attempt after user interaction');
             
-            // Retry mechanism for music playback
+            // Enhanced retry mechanism for mobile
             let retryCount = 0;
-            const maxRetries = 10;
+            const maxRetries = isMobile ? 20 : 10; // More retries for mobile
+            const retryDelay = isMobile ? 1000 : 500; // Longer delay for mobile
             
             function tryPlayMusic() {
               if (window.scWidget) {
                 console.log(`Attempting to play music (attempt ${retryCount + 1}/${maxRetries})`);
-                window.scWidget.play().then(() => {
-                  console.log('Music playback started successfully!');
-                  window.pendingSoundCloudPlay = false;
-                }).catch(error => {
-                  console.log(`Play attempt ${retryCount + 1} failed:`, error);
+                
+                // On mobile, ensure widget is fully ready
+                if (isMobile && !window.scWidgetReady) {
+                  console.log('Mobile: Widget not fully ready, waiting...');
                   retryCount++;
-                  
-                  // Keep retrying if we haven't exceeded max retries
-                  if (retryCount < maxRetries && window.pendingSoundCloudPlay) {
-                    setTimeout(tryPlayMusic, 500);
+                  if (retryCount < maxRetries) {
+                    setTimeout(tryPlayMusic, retryDelay);
                   }
-                });
+                  return;
+                }
+                
+                // Try to play with Promise handling
+                const playPromise = window.scWidget.play();
+                
+                if (playPromise && typeof playPromise.then === 'function') {
+                  playPromise.then(() => {
+                    console.log('Music playback started successfully!');
+                    window.pendingSoundCloudPlay = false;
+                  }).catch(error => {
+                    console.log(`Play attempt ${retryCount + 1} failed:`, error);
+                    retryCount++;
+                    
+                    // Keep retrying if we haven't exceeded max retries
+                    if (retryCount < maxRetries && window.pendingSoundCloudPlay) {
+                      setTimeout(tryPlayMusic, retryDelay);
+                    } else if (retryCount >= maxRetries) {
+                      console.log('Max retries reached. Music may not play automatically.');
+                      // On mobile, set up a fallback click handler
+                      if (isMobile) {
+                        console.log('Setting up fallback click handler for mobile');
+                        document.addEventListener('click', function fallbackPlay() {
+                          if (window.scWidget && window.pendingSoundCloudPlay) {
+                            window.scWidget.play().then(() => {
+                              console.log('Fallback play successful!');
+                              window.pendingSoundCloudPlay = false;
+                              document.removeEventListener('click', fallbackPlay);
+                            }).catch(err => {
+                              console.log('Fallback play failed:', err);
+                            });
+                          }
+                        }, { once: false });
+                      }
+                    }
+                  });
+                } else {
+                  // Fallback for older API
+                  console.log('Using fallback play method');
+                  window.scWidget.play();
+                  setTimeout(() => {
+                    window.pendingSoundCloudPlay = false;
+                  }, 100);
+                }
               } else {
                 // Widget not ready yet, retry
                 retryCount++;
                 if (retryCount < maxRetries && window.pendingSoundCloudPlay) {
                   console.log('Widget not ready, retrying...');
-                  setTimeout(tryPlayMusic, 500);
+                  setTimeout(tryPlayMusic, retryDelay);
                 }
               }
             }
             
-            // Start trying to play music immediately
-            tryPlayMusic();
+            // Start trying to play music with initial delay for mobile
+            if (isMobile) {
+              console.log('Mobile: Waiting 2 seconds before first play attempt');
+              setTimeout(tryPlayMusic, 2000);
+            } else {
+              tryPlayMusic();
+            }
           }
           
           // Hide overlay
