@@ -1156,22 +1156,33 @@
           // Mark widget as ready
           window.scWidgetReady = true;
           
-          // Only play if user has already interacted with the page
+          // Try to play if user has already interacted
           if (window.userHasInteracted && !isMuted) {
-            console.log('Attempting to start SoundCloud playback');
-            setTimeout(() => {
-              widget.play().then(() => {
-                console.log('Music started playing');
-                window.pendingSoundCloudPlay = false;
-              }).catch(error => {
-                console.log('Initial play failed, will retry on next user interaction');
-                window.pendingSoundCloudPlay = true;
-              });
-            }, 100);
+            console.log('Widget ready, attempting autoplay');
+            widget.play().then(() => {
+              console.log('Autoplay successful!');
+              window.pendingSoundCloudPlay = false;
+            }).catch(error => {
+              console.log('Autoplay blocked, will retry on next interaction');
+              window.pendingSoundCloudPlay = true;
+            });
           } else {
             // Mark that we have pending music to play after user interaction
             window.pendingSoundCloudPlay = true;
-            console.log('Waiting for user interaction to play music');
+            console.log('Widget ready, waiting for user interaction');
+          }
+          
+          // Also check if there's a pending play request
+          if (window.pendingSoundCloudPlay && window.userHasInteracted && !isMuted) {
+            console.log('Processing pending play request');
+            setTimeout(() => {
+              widget.play().then(() => {
+                console.log('Pending play request successful!');
+                window.pendingSoundCloudPlay = false;
+              }).catch(error => {
+                console.log('Pending play failed:', error);
+              });
+            }, 200);
           }
         });
         
@@ -1415,7 +1426,7 @@
       { id: 'experience', text: '## Experience Highlights\n• 17+ years in Software Development\n• Senior Developer at BitoPro Crypto Exchange (2022-Present)\n  - Crypto Market Making Systems\n  - CFD Risk Hedging Strategies\n  - Grid Trading & Arbitrage Bots\n• Risk Manager at Phnom Penh Derivative Exchange (2017-2022)\n  - MT4/MT5 Administration & Risk Management\n  - Derivative Products Design\n• iOS Contractor for VoIP, Golf GPS, Wireless Storage Apps\n• Live Casino Gaming Systems Developer (5+ years)\n• Social Network Games Developer (Facebook Games)\n• Educational iPad Apps & Interactive Media', speed: 25 },
       { id: 'current', text: '## Current Projects\n→ Bluetooth Device Integration & AI Applications\n→ B2C Commercial Management Platform\n→ Trading Systems (Grid Trading, Arbitrage Bots)\n→ Crypto Market Making & Liquidity Provision', speed: 30 },
       { id: 'tradingChart', text: '', speed: 0, isChart: true },
-      { id: 'contact', text: '## Contact\n• BattleTag: DjFeu#3832\n• Email: magic.music@gmail.com\n• LINE: djfeu\n• LINE URL: https://line.me/ti/p/djfeu\n• Location: Taipei, Taiwan\n• Maps: https://maps.app.goo.gl/7jhT75hEEWpUEoKS8', speed: 40 },
+      { id: 'contact', text: '## Contact\\n• BattleTag: DjFeu#3832\\n• Email: magic.music@gmail.com\\n• LINE: djfeu\\n• LINE URL: https://line.me/ti/p/djfeu\\n• Location: Taipei, Taiwan\\n• Maps: https://maps.app.goo.gl/7jhT75hEEWpUEoKS8', speed: 40 },
       { id: 'formula', text: '', speed: 0, isFormula: true }
     ];
 
@@ -1778,29 +1789,41 @@
             audioContext.resume();
           }
           
-          // If SoundCloud widget is ready and music is pending, start playing
-          if (window.pendingSoundCloudPlay && window.scWidget && window.scWidgetReady && !isMuted) {
-            console.log('Starting SoundCloud playback after user interaction');
-            // Add small delay to ensure widget is fully ready
-            setTimeout(() => {
-              window.scWidget.play().then(() => {
-                console.log('SoundCloud playback started successfully');
-                window.pendingSoundCloudPlay = false;
-              }).catch(error => {
-                console.log('SoundCloud play failed:', error);
-                // Fallback: try again after a longer delay
-                setTimeout(() => {
-                  if (window.scWidget && !isMuted) {
-                    window.scWidget.play().then(() => {
-                      console.log('SoundCloud playback started on retry');
-                      window.pendingSoundCloudPlay = false;
-                    }).catch(err => {
-                      console.log('SoundCloud retry also failed:', err);
-                    });
+          // Start music playback with retry mechanism
+          if (window.pendingSoundCloudPlay && !isMuted) {
+            console.log('Starting music playback attempt after user interaction');
+            
+            // Retry mechanism for music playback
+            let retryCount = 0;
+            const maxRetries = 10;
+            
+            function tryPlayMusic() {
+              if (window.scWidget) {
+                console.log(`Attempting to play music (attempt ${retryCount + 1}/${maxRetries})`);
+                window.scWidget.play().then(() => {
+                  console.log('Music playback started successfully!');
+                  window.pendingSoundCloudPlay = false;
+                }).catch(error => {
+                  console.log(`Play attempt ${retryCount + 1} failed:`, error);
+                  retryCount++;
+                  
+                  // Keep retrying if we haven't exceeded max retries
+                  if (retryCount < maxRetries && window.pendingSoundCloudPlay) {
+                    setTimeout(tryPlayMusic, 500);
                   }
-                }, 1000);
-              });
-            }, 200);
+                });
+              } else {
+                // Widget not ready yet, retry
+                retryCount++;
+                if (retryCount < maxRetries && window.pendingSoundCloudPlay) {
+                  console.log('Widget not ready, retrying...');
+                  setTimeout(tryPlayMusic, 500);
+                }
+              }
+            }
+            
+            // Start trying to play music immediately
+            tryPlayMusic();
           }
           
           // Hide overlay
