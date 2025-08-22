@@ -691,21 +691,9 @@
         padding: 0 5px;
       }
       
+      /* Hide decorations on mobile to avoid visual obstruction */
       .formula-decoration {
-        font-size: 16px;
-      }
-      
-      .decoration-left {
-        left: 10px;
-      }
-      
-      .decoration-right {
-        right: 10px;
-      }
-      
-      .heart, .dollar {
-        display: inline-block;
-        margin: 0 2px;
+        display: none !important;
       }
       
       /* 音樂控制按鈕 */
@@ -799,12 +787,9 @@
         letter-spacing: 0.5px;
       }
       
+      /* Hide decorations on very small screens */
       .formula-decoration {
-        font-size: 14px;
-      }
-      
-      .decoration-left, .decoration-right {
-        display: none; /* 在超小螢幕隱藏裝飾 */
+        display: none !important;
       }
       
       .btn-buy, .btn-sell {
@@ -1100,8 +1085,95 @@
       createBackgroundMusic();
     }
 
+    // Global music system variables
+    let currentSongIndex = 0;
+    let musicIntervals = [];
+    let musicOscillators = [];
+    
     function createBackgroundMusic() {
-      // Create 8-bit chiptune style music
+      // Three different 8-bit chiptune songs
+      const songs = [
+        // Song 1: Classic Adventure Theme
+        {
+          name: "Adventure",
+          melody: [
+            // Main theme - upbeat and adventurous
+            329.63, 329.63, 0, 329.63, 0, 261.63, 329.63, 0, 
+            392.00, 0, 0, 0, 196.00, 0, 0, 0,
+            261.63, 0, 0, 196.00, 0, 164.81, 0, 0,
+            220.00, 0, 246.94, 0, 261.63, 0, 220.00, 196.00,
+            392.00, 369.99, 349.23, 329.63, 0, 311.13, 329.63, 0,
+            349.23, 0, 392.00, 440.00, 523.25, 0, 440.00, 0,
+            587.33, 0, 523.25, 0, 493.88, 0, 440.00, 0,
+            392.00, 0, 329.63, 349.23, 329.63, 0, 261.63, 0
+          ],
+          bass: [
+            98.00, 98.00, 98.00, 98.00, 123.47, 123.47, 123.47, 123.47,
+            130.81, 130.81, 130.81, 130.81, 98.00, 98.00, 98.00, 98.00
+          ],
+          arpeggio: [
+            1046.50, 1318.51, 1567.98, 1318.51,
+            1174.66, 1396.91, 1760.00, 1396.91
+          ],
+          tempo: 125
+        },
+        // Song 2: Mysterious Dungeon Theme
+        {
+          name: "Mystery",
+          melody: [
+            // Darker, mysterious theme
+            146.83, 0, 146.83, 0, 174.61, 0, 146.83, 0,
+            196.00, 0, 174.61, 0, 146.83, 0, 130.81, 0,
+            146.83, 155.56, 174.61, 185.00, 196.00, 0, 174.61, 0,
+            220.00, 0, 196.00, 0, 174.61, 0, 155.56, 146.83,
+            130.81, 0, 146.83, 0, 155.56, 0, 174.61, 0,
+            185.00, 196.00, 220.00, 233.08, 246.94, 0, 220.00, 0,
+            261.63, 0, 246.94, 220.00, 196.00, 174.61, 155.56, 146.83,
+            130.81, 0, 0, 0, 146.83, 0, 0, 0
+          ],
+          bass: [
+            73.42, 73.42, 73.42, 73.42, 87.31, 87.31, 87.31, 87.31,
+            65.41, 65.41, 65.41, 65.41, 73.42, 73.42, 73.42, 73.42
+          ],
+          arpeggio: [
+            587.33, 698.46, 880.00, 698.46,
+            523.25, 659.25, 783.99, 659.25
+          ],
+          tempo: 140
+        },
+        // Song 3: Boss Battle Theme
+        {
+          name: "Battle",
+          melody: [
+            // Intense, fast-paced battle theme
+            440.00, 440.00, 0, 440.00, 523.25, 0, 440.00, 0,
+            392.00, 0, 349.23, 0, 329.63, 0, 392.00, 0,
+            440.00, 0, 523.25, 0, 587.33, 0, 523.25, 0,
+            493.88, 0, 440.00, 0, 392.00, 0, 349.23, 329.63,
+            293.66, 329.63, 349.23, 392.00, 440.00, 392.00, 349.23, 329.63,
+            293.66, 0, 329.63, 0, 349.23, 0, 392.00, 0,
+            440.00, 493.88, 523.25, 587.33, 659.25, 587.33, 523.25, 493.88,
+            440.00, 0, 0, 0, 880.00, 0, 0, 0
+          ],
+          bass: [
+            110.00, 110.00, 110.00, 110.00, 82.41, 82.41, 82.41, 82.41,
+            73.42, 73.42, 73.42, 73.42, 110.00, 110.00, 110.00, 110.00
+          ],
+          arpeggio: [
+            880.00, 1108.73, 1318.51, 1108.73,
+            987.77, 1244.51, 1479.98, 1244.51
+          ],
+          tempo: 110
+        }
+      ];
+      
+      // Stop any existing music
+      stopCurrentMusic();
+      
+      // Get current song
+      const song = songs[currentSongIndex];
+      
+      // Create oscillators for current song
       const mainOsc = audioContext.createOscillator();
       const bassOsc = audioContext.createOscillator();
       const leadOsc = audioContext.createOscillator();
@@ -1129,7 +1201,7 @@
       bitcrusher.curve = curve;
       bitcrusher.oversample = 'none';
       
-      // Configure oscillators for 8-bit sound
+      // Configure oscillators
       mainOsc.type = 'square';
       bassOsc.type = 'triangle';
       leadOsc.type = 'square';
@@ -1139,47 +1211,22 @@
       filter.frequency.value = 3000;
       filter.Q.value = 1;
       
-      // 8-bit style melody pattern (inspired by classic chiptune)
-      const melody = [
-        // Bar 1-2: Main theme
-        329.63, 329.63, 0, 329.63, 0, 261.63, 329.63, 0, 
-        392.00, 0, 0, 0, 196.00, 0, 0, 0,
-        // Bar 3-4: Variation
-        261.63, 0, 0, 196.00, 0, 164.81, 0, 0,
-        220.00, 0, 246.94, 0, 261.63, 0, 220.00, 196.00,
-        // Bar 5-6: Build up
-        392.00, 369.99, 349.23, 329.63, 0, 311.13, 329.63, 0,
-        349.23, 0, 392.00, 440.00, 523.25, 0, 440.00, 0,
-        // Bar 7-8: Resolution
-        587.33, 0, 523.25, 0, 493.88, 0, 440.00, 0,
-        392.00, 0, 329.63, 349.23, 329.63, 0, 261.63, 0
-      ];
-      
-      // Bass line pattern
-      const bassNotes = [
-        98.00, 98.00, 98.00, 98.00, 123.47, 123.47, 123.47, 123.47,
-        130.81, 130.81, 130.81, 130.81, 98.00, 98.00, 98.00, 98.00
-      ];
-      
-      // Lead arpeggio pattern
-      const arpeggio = [
-        1046.50, 1318.51, 1567.98, 1318.51,
-        1174.66, 1396.91, 1760.00, 1396.91
-      ];
-      
+      // Track indices
       let melodyIndex = 0;
       let bassIndex = 0;
       let arpIndex = 0;
       let tickCount = 0;
+      let loopCount = 0;
       
-      // Store oscillators globally for cleanup
+      // Store oscillators for cleanup
+      musicOscillators = [mainOsc, bassOsc, leadOsc, noiseOsc];
       backgroundOscillator = mainOsc;
       backgroundGain = mainGain;
       
       // Play main melody
       function playMelody() {
         if (!isMuted && audioContext && audioContext.state === 'running') {
-          const freq = melody[melodyIndex];
+          const freq = song.melody[melodyIndex];
           if (freq > 0) {
             mainOsc.frequency.setValueAtTime(freq, audioContext.currentTime);
             mainGain.gain.setValueAtTime(0.08, audioContext.currentTime);
@@ -1188,19 +1235,31 @@
           } else {
             mainGain.gain.setValueAtTime(0.001, audioContext.currentTime);
           }
-          melodyIndex = (melodyIndex + 1) % melody.length;
+          melodyIndex = (melodyIndex + 1) % song.melody.length;
+          
+          // Check if melody completed full loop
+          if (melodyIndex === 0) {
+            loopCount++;
+            // Switch to next song after 2 loops
+            if (loopCount >= 2) {
+              setTimeout(() => {
+                currentSongIndex = (currentSongIndex + 1) % songs.length;
+                createBackgroundMusic(); // Play next song
+              }, 2000);
+            }
+          }
         }
       }
       
       // Play bass line
       function playBass() {
         if (!isMuted && audioContext && audioContext.state === 'running') {
-          const freq = bassNotes[bassIndex];
+          const freq = song.bass[bassIndex];
           bassOsc.frequency.setValueAtTime(freq, audioContext.currentTime);
           bassGain.gain.setValueAtTime(0.1, audioContext.currentTime);
           bassGain.gain.setValueAtTime(0.1, audioContext.currentTime + 0.1);
           bassGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
-          bassIndex = (bassIndex + 1) % bassNotes.length;
+          bassIndex = (bassIndex + 1) % song.bass.length;
         }
       }
       
@@ -1208,24 +1267,24 @@
       function playArpeggio() {
         if (!isMuted && audioContext && audioContext.state === 'running') {
           tickCount++;
-          if (tickCount % 2 === 0) { // Play every other tick
-            const freq = arpeggio[arpIndex];
+          if (tickCount % 2 === 0) {
+            const freq = song.arpeggio[arpIndex];
             leadOsc.frequency.setValueAtTime(freq, audioContext.currentTime);
             leadGain.gain.setValueAtTime(0.03, audioContext.currentTime);
             leadGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.03);
-            arpIndex = (arpIndex + 1) % arpeggio.length;
+            arpIndex = (arpIndex + 1) % song.arpeggio.length;
           }
         }
       }
       
-      // Play noise drum
+      // Play drums
       function playDrum() {
         if (!isMuted && audioContext && audioContext.state === 'running') {
-          if (tickCount % 8 === 0 || tickCount % 8 === 4) { // Kick pattern
+          if (tickCount % 8 === 0 || tickCount % 8 === 4) {
             noiseOsc.frequency.setValueAtTime(60, audioContext.currentTime);
             noiseGain.gain.setValueAtTime(0.15, audioContext.currentTime);
             noiseGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
-          } else if (tickCount % 8 === 2 || tickCount % 8 === 6) { // Snare pattern
+          } else if (tickCount % 8 === 2 || tickCount % 8 === 6) {
             noiseOsc.frequency.setValueAtTime(200, audioContext.currentTime);
             noiseGain.gain.setValueAtTime(0.05, audioContext.currentTime);
             noiseGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.02);
@@ -1233,15 +1292,18 @@
         }
       }
       
-      // Set up intervals for playback (120 BPM, 16th notes)
-      setInterval(() => {
+      // Set up intervals based on song tempo
+      const melodyInterval = setInterval(() => {
         playMelody();
         playDrum();
-      }, 125); // 16th notes at 120 BPM
-      setInterval(playBass, 250); // 8th notes
-      setInterval(playArpeggio, 62.5); // 32nd notes
+      }, song.tempo);
+      const bassInterval = setInterval(playBass, song.tempo * 2);
+      const arpInterval = setInterval(playArpeggio, song.tempo / 2);
       
-      // Connect audio nodes with bit crusher effect
+      // Store intervals for cleanup
+      musicIntervals = [melodyInterval, bassInterval, arpInterval];
+      
+      // Connect audio nodes
       mainOsc.connect(bitcrusher);
       bitcrusher.connect(filter);
       filter.connect(mainGain);
@@ -1267,6 +1329,23 @@
       bassGain.gain.value = 0.001;
       leadGain.gain.value = 0.001;
       noiseGain.gain.value = 0.001;
+    }
+    
+    // Function to stop current music
+    function stopCurrentMusic() {
+      // Clear all intervals
+      musicIntervals.forEach(interval => clearInterval(interval));
+      musicIntervals = [];
+      
+      // Stop all oscillators
+      musicOscillators.forEach(osc => {
+        try {
+          osc.stop();
+        } catch (e) {
+          // Oscillator might already be stopped
+        }
+      });
+      musicOscillators = [];
     }
 
     // Typing sound effect - realistic keyboard press
@@ -1397,14 +1476,49 @@
           i--;
           setTimeout(deleteChar, 50);
         } else {
-          // Start typing correct text
+          // Start typing correct text with special handling for "loser"
+          element.innerHTML = ''; // Clear and use innerHTML for styling
           let j = 0;
+          let displayText = '';
+          
           function typeCorrect() {
             if (j < correctText.length) {
-              element.textContent += correctText.charAt(j);
-              playTypingSound();
-              j++;
-              setTimeout(typeCorrect, 60 + (Math.random() - 0.5) * 30);
+              // Check if we're at the word "loser"
+              if (correctText.substring(j).startsWith('loser')) {
+                // Type "loser" character by character first
+                const loserStart = j;
+                function typeLoser() {
+                  if (j < loserStart + 5) {
+                    displayText += correctText.charAt(j);
+                    element.innerHTML = displayText;
+                    playTypingSound();
+                    j++;
+                    setTimeout(typeLoser, 60);
+                  } else {
+                    // After "loser" is typed, add strikethrough and continue
+                    setTimeout(() => {
+                      // Replace "loser" with strikethrough version
+                      displayText = displayText.substring(0, displayText.length - 5) + 
+                                   '<span style="text-decoration: line-through; opacity: 0.6;">loser</span>';
+                      element.innerHTML = displayText;
+                      
+                      // Continue typing " dreamer"
+                      setTimeout(() => {
+                        typeCorrect();
+                      }, 500);
+                    }, 400);
+                  }
+                }
+                typeLoser();
+              } else {
+                // Regular character typing
+                const char = correctText.charAt(j);
+                displayText += char;
+                element.innerHTML = displayText;
+                playTypingSound();
+                j++;
+                setTimeout(typeCorrect, 60 + (Math.random() - 0.5) * 30);
+              }
             } else {
               setTimeout(() => {
                 cursor.remove();
@@ -1423,7 +1537,7 @@
       { id: 'cmd1', text: 'cat resume.txt', speed: 80 },
       { id: 'name', text: 'Adam Hung', speed: 120 },
       { id: 'title', text: 'Extremely gifted pro trader & hacker.', speed: 60, isWrong: true, 
-        correctText: 'A not-so-gifted trader and a bit of a loser.', deleteDelay: 1500 },
+        correctText: 'A not-so-gifted trader and a bit of a loser dreamer.', deleteDelay: 1500 },
       { id: 'bio', text: "I'm a developer/trader with a passion for multimedia and trading, equally at home tinkering with code as I am exploring music or the latest in internet tech. I dabble in investing and entrepreneurship, and people usually describe me as calm, kind, and a bit of a debugging detective. I thrive on challenges, enjoy learning new things, and I'm always open to exciting collaborations—whether it's building, breaking, or boldly experimenting with the next big idea.", speed: 30 },
       { id: 'skills', text: '## Core Skills\n> Languages: Swift, Objective-C, Python, JavaScript, SQL, PHP\n> Technologies: Socket Programming, Live Streaming, GPS/Bluetooth, Web Development\n> Platforms: iOS/macOS, Web Apps, Desktop Tools, Crawlers & Automation\n> Trading: MT4/MT5 Administrator, Risk Manager, Quantitative Trader\n> Blockchain: Crypto Exchange Systems, Web3 Development, Market Making, CFD Risk Hedging', speed: 20 },
       { id: 'experience', text: '## Experience Highlights\n• 17+ years in Software Development\n• Senior Developer at BitoPro Crypto Exchange (2022-Present)\n  - Crypto Market Making Systems\n  - CFD Risk Hedging Strategies\n  - Grid Trading & Arbitrage Bots\n• Risk Manager at Phnom Penh Derivative Exchange (2017-2022)\n  - MT4/MT5 Administration & Risk Management\n  - Derivative Products Design\n• iOS Contractor for VoIP, Golf GPS, Wireless Storage Apps\n• Live Casino Gaming Systems Developer (5+ years)\n• Social Network Games Developer (Facebook Games)\n• Educational iPad Apps & Interactive Media', speed: 25 },
