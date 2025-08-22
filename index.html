@@ -181,7 +181,7 @@
       color: #00ffff;
       text-decoration: none;
       transition: all 0.3s;
-      word-break: break-word; /* 確保長 URL 能夠換行 */
+      word-break: break-word; /* Ensure long URLs can wrap */
       display: inline-block;
     }
 
@@ -338,17 +338,17 @@
       text-orientation: mixed;
     }
 
-    /* Kelly Formula - 修正溢出和置中問題 */
+    /* Kelly Formula - Fix overflow and centering issues */
     .kelly-formula {
-      margin: 30px 0; /* 改為與其他區塊相同的 margin */
+      margin: 30px 0; /* Same margin as other sections */
       padding: 20px;
       border: 2px solid #ff0000;
       border-radius: 10px;
       text-align: center;
       background: rgba(255, 0, 0, 0.1);
       display: none;
-      overflow: hidden; /* 改為 hidden 防止溢出 */
-      width: 100%; /* 使用 100% 寬度與其他區塊對齊 */
+      overflow: hidden; /* Set to hidden to prevent overflow */
+      width: 100%; /* Use 100% width to align with other sections */
       box-sizing: border-box;
       position: relative;
     }
@@ -589,16 +589,16 @@
       color: #00ffff;
     }
 
-    /* 增強的響應式設計 */
+    /* Enhanced responsive design */
     @media (max-width: 768px) {
-      /* 調整 Terminal 容器 */
+      /* Adjust Terminal container */
       #terminal {
         padding: 15px 10px 30px 10px;
         padding-top: 15px;
         justify-content: flex-start; /* Mobile: start from top */
       }
       
-      /* 調整 Terminal 視窗 */
+      /* Adjust Terminal window */
       .terminal-window {
         margin: 0 5px;
         border-radius: 5px;
@@ -608,7 +608,7 @@
         padding: 15px;
       }
       
-      /* 標題文字大小調整 */
+      /* Adjust title text size */
       h1.typed { 
         font-size: 32px;
         letter-spacing: 1px;
@@ -637,23 +637,23 @@
         font-size: 14px;
       }
       
-      /* 技能和經驗區塊 */
+      /* Skills and experience sections */
       .skills-section, .experience-section, .current-section {
         padding-left: 15px;
         margin: 20px 0;
       }
       
-      /* 聯絡資訊區塊 */
+      /* Contact information section */
       .contact-section {
         padding: 15px;
         font-size: 13px;
         word-break: break-word;
       }
       
-      /* Trading 區塊 */
+      /* Trading section */
       .trading-section {
         padding: 15px;
-        margin: 15px -5px; /* 負 margin 防止被截斷 */
+        margin: 15px -5px; /* Negative margin to prevent cutoff */
       }
       
       #depthChart {
@@ -662,7 +662,7 @@
       
       .trading-buttons {
         gap: 10px;
-        flex-direction: column; /* 在小螢幕上垂直排列 */
+        flex-direction: column; /* Vertical layout on small screens */
       }
       
       .btn-buy, .btn-sell {
@@ -671,16 +671,16 @@
         letter-spacing: 1px;
       }
       
-      /* Kelly 公式 - 關鍵修正 */
+      /* Kelly formula - Key fixes */
       .kelly-formula {
-        margin: 20px 0; /* 與其他區塊對齊 */
+        margin: 20px 0; /* Align with other sections */
         padding: 15px 10px;
         border-radius: 5px;
-        width: 100%; /* 使用 100% 寬度 */
+        width: 100%; /* Use 100% width */
       }
       
       .formula-text {
-        font-size: 20px; /* 大幅縮小字體 */
+        font-size: 20px; /* Significantly reduced font size */
         letter-spacing: 1px;
         padding: 0 5px;
       }
@@ -690,7 +690,7 @@
         display: none !important;
       }
       
-      /* 音樂控制按鈕 */
+      /* Music control button */
       .music-control {
         width: 40px;
         height: 40px;
@@ -702,7 +702,7 @@
         font-size: 18px;
       }
       
-      /* 載入畫面 */
+      /* Loading screen */
       .loading-text {
         font-size: 20px;
       }
@@ -712,7 +712,7 @@
         max-width: 250px;
       }
       
-      /* 開始覆蓋層 */
+      /* Start overlay */
       .start-text {
         font-size: 24px;
         padding: 0 20px;
@@ -722,7 +722,7 @@
         font-size: 14px;
       }
       
-      /* 停用複雜動畫以提升性能 - 只保留光暈效果 */
+      /* Disable complex animations for performance - keep only glow effect */
       @keyframes pulseGreen {
         0%, 100% { 
           box-shadow: 0 0 10px #00ff00;
@@ -741,13 +741,13 @@
         }
       }
       
-      /* 調整按鈕 hover 效果 - 移除縮放 */
+      /* Adjust button hover effect - remove scaling */
       .btn-buy:hover, .btn-sell:hover {
         opacity: 1;
       }
     }
     
-    /* 超小型裝置 (iPhone SE, etc.) */
+    /* Ultra-small devices (iPhone SE, etc.) */
     @media (max-width: 375px) {
       #terminal {
         padding: 15px 5px;
@@ -775,13 +775,13 @@
       }
       
       .kelly-formula {
-        margin: 15px 0; /* 與其他區塊對齊 */
+        margin: 15px 0; /* Align with other sections */
         padding: 12px 8px;
-        width: 100%; /* 使用 100% 寬度 */
+        width: 100%; /* Use 100% width */
       }
       
       .formula-text {
-        font-size: 18px; /* 更小的字體 */
+        font-size: 18px; /* Smaller font size */
         letter-spacing: 0.5px;
       }
       
@@ -796,7 +796,7 @@
       }
     }
     
-    /* 橫向模式優化 */
+    /* Landscape mode optimization */
     @media (max-height: 500px) and (orientation: landscape) {
       #terminal {
         padding-top: 20px;
@@ -895,9 +895,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   
   <script>
-    // [JavaScript 程式碼保持不變 - 太長無法完整顯示，但保持原始功能]
-    // 這裡包含所有原始的 JavaScript 程式碼
-    // 包括 3D Matrix 效果、打字效果、音效系統、交易圖表等
+    // [JavaScript code remains unchanged - too long to display fully, but retains original functionality]
+    // This contains all original JavaScript code
+    // Including 3D Matrix effects, typing effects, audio system, trading charts, etc.
     
     // Check if mobile device to optimize performance
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -1083,136 +1083,93 @@
       initModPlayer();
     }
 
-    // Initialize MOD music player using simple audio element
+    // Initialize SoundCloud music player
     function initModPlayer() {
-      // Create audio element for MOD music
-      const audio = document.createElement('audio');
-      audio.loop = true;
-      audio.volume = 0.3;
+      // Create SoundCloud iframe player
+      const iframe = document.createElement('iframe');
+      iframe.width = '100%';
+      iframe.height = '166'; // Minimal height
+      iframe.scrolling = 'no';
+      iframe.frameborder = 'no';
+      iframe.allow = 'autoplay';
+      // SoundCloud URL with auto_play and single track looping
+      iframe.src = 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/238369911&color=%2300ff00&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false&single_active=false&show_artwork=false';
       
-      // MOD Archive provides streaming URLs - using the one you specified
-      // Module ID 81398 - direct streaming URL
-      audio.src = 'https://modarchive.org/jsplayer.php?moduleid=81398';
+      // Hide the iframe visually but keep audio
+      iframe.style.position = 'fixed';
+      iframe.style.bottom = '-200px';
+      iframe.style.left = '0';
+      iframe.style.width = '1px';
+      iframe.style.height = '1px';
+      iframe.style.opacity = '0';
+      iframe.style.pointerEvents = 'none';
+      iframe.style.zIndex = '-9999';
       
-      // Alternative: Use the direct download URL (might have CORS issues)
-      // audio.src = 'https://api.modarchive.org/downloads.php?moduleid=81398';
+      // Add to body
+      document.body.appendChild(iframe);
       
-      // Store audio element globally
-      window.modAudio = audio;
+      // Store iframe reference for control
+      window.soundCloudPlayer = iframe;
       
-      // Play function
-      window.playModMusic = function() {
-        if (audio && !isMuted) {
-          audio.play().catch(e => {
-            console.log('Failed to play MOD music, falling back to generated music');
-            createBackgroundMusic();
-          });
+      // Get the widget API
+      const script = document.createElement('script');
+      script.src = 'https://w.soundcloud.com/player/api.js';
+      script.onload = function() {
+        const widget = SC.Widget(iframe);
+        window.scWidget = widget;
+        
+        // Set volume
+        widget.setVolume(30);
+        
+        // Loop the track infinitely
+        widget.bind(SC.Widget.Events.FINISH, function() {
+          widget.seekTo(0); // Reset to beginning
+          widget.play(); // Play again
+        });
+        
+        // Also ensure looping is enabled
+        widget.bind(SC.Widget.Events.READY, function() {
+          // Set to loop mode if available
+          widget.play();
+        });
+        
+        // Auto play based on mute state
+        if (!isMuted) {
+          widget.play();
         }
       };
-      
-      // Stop function
-      window.stopModMusic = function() {
-        if (audio) {
-          audio.pause();
-          audio.currentTime = 0;
-        }
-      };
-      
-      // Auto-play if not muted
-      if (!isMuted) {
-        window.playModMusic();
-      }
-      
-      // Handle audio errors
-      audio.onerror = function() {
-        console.log('MOD music failed to load, using generated music as fallback');
-        createBackgroundMusic();
-      };
+      document.body.appendChild(script);
     }
 
-    // Fallback: Generated 8-bit music (keeping as backup)
+    // Fallback: Generated 8-bit Mario-style music (keeping as backup)
     function createBackgroundMusic() {
-      // Three different 8-bit chiptune songs
-      const songs = [
-        // Song 1: Classic Adventure Theme
-        {
-          name: "Adventure",
-          melody: [
-            // Main theme - upbeat and adventurous
-            329.63, 329.63, 0, 329.63, 0, 261.63, 329.63, 0, 
-            392.00, 0, 0, 0, 196.00, 0, 0, 0,
-            261.63, 0, 0, 196.00, 0, 164.81, 0, 0,
-            220.00, 0, 246.94, 0, 261.63, 0, 220.00, 196.00,
-            392.00, 369.99, 349.23, 329.63, 0, 311.13, 329.63, 0,
-            349.23, 0, 392.00, 440.00, 523.25, 0, 440.00, 0,
-            587.33, 0, 523.25, 0, 493.88, 0, 440.00, 0,
-            392.00, 0, 329.63, 349.23, 329.63, 0, 261.63, 0
-          ],
-          bass: [
-            98.00, 98.00, 98.00, 98.00, 123.47, 123.47, 123.47, 123.47,
-            130.81, 130.81, 130.81, 130.81, 98.00, 98.00, 98.00, 98.00
-          ],
-          arpeggio: [
-            1046.50, 1318.51, 1567.98, 1318.51,
-            1174.66, 1396.91, 1760.00, 1396.91
-          ],
-          tempo: 125
-        },
-        // Song 2: Mysterious Dungeon Theme
-        {
-          name: "Mystery",
-          melody: [
-            // Darker, mysterious theme
-            146.83, 0, 146.83, 0, 174.61, 0, 146.83, 0,
-            196.00, 0, 174.61, 0, 146.83, 0, 130.81, 0,
-            146.83, 155.56, 174.61, 185.00, 196.00, 0, 174.61, 0,
-            220.00, 0, 196.00, 0, 174.61, 0, 155.56, 146.83,
-            130.81, 0, 146.83, 0, 155.56, 0, 174.61, 0,
-            185.00, 196.00, 220.00, 233.08, 246.94, 0, 220.00, 0,
-            261.63, 0, 246.94, 220.00, 196.00, 174.61, 155.56, 146.83,
-            130.81, 0, 0, 0, 146.83, 0, 0, 0
-          ],
-          bass: [
-            73.42, 73.42, 73.42, 73.42, 87.31, 87.31, 87.31, 87.31,
-            65.41, 65.41, 65.41, 65.41, 73.42, 73.42, 73.42, 73.42
-          ],
-          arpeggio: [
-            587.33, 698.46, 880.00, 698.46,
-            523.25, 659.25, 783.99, 659.25
-          ],
-          tempo: 140
-        },
-        // Song 3: Boss Battle Theme
-        {
-          name: "Battle",
-          melody: [
-            // Intense, fast-paced battle theme
-            440.00, 440.00, 0, 440.00, 523.25, 0, 440.00, 0,
-            392.00, 0, 349.23, 0, 329.63, 0, 392.00, 0,
-            440.00, 0, 523.25, 0, 587.33, 0, 523.25, 0,
-            493.88, 0, 440.00, 0, 392.00, 0, 349.23, 329.63,
-            293.66, 329.63, 349.23, 392.00, 440.00, 392.00, 349.23, 329.63,
-            293.66, 0, 329.63, 0, 349.23, 0, 392.00, 0,
-            440.00, 493.88, 523.25, 587.33, 659.25, 587.33, 523.25, 493.88,
-            440.00, 0, 0, 0, 880.00, 0, 0, 0
-          ],
-          bass: [
-            110.00, 110.00, 110.00, 110.00, 82.41, 82.41, 82.41, 82.41,
-            73.42, 73.42, 73.42, 73.42, 110.00, 110.00, 110.00, 110.00
-          ],
-          arpeggio: [
-            880.00, 1108.73, 1318.51, 1108.73,
-            987.77, 1244.51, 1479.98, 1244.51
-          ],
-          tempo: 110
-        }
-      ];
+      // Single Mario-style adventure theme
+      const song = {
+        name: "Mario Adventure",
+        melody: [
+          // Main theme - upbeat and adventurous (Mario-style)
+          329.63, 329.63, 0, 329.63, 0, 261.63, 329.63, 0, 
+          392.00, 0, 0, 0, 196.00, 0, 0, 0,
+          261.63, 0, 0, 196.00, 0, 164.81, 0, 0,
+          220.00, 0, 246.94, 0, 261.63, 0, 220.00, 196.00,
+          392.00, 369.99, 349.23, 329.63, 0, 311.13, 329.63, 0,
+          349.23, 0, 392.00, 440.00, 523.25, 0, 440.00, 0,
+          587.33, 0, 523.25, 0, 493.88, 0, 440.00, 0,
+          392.00, 0, 329.63, 349.23, 329.63, 0, 261.63, 0
+        ],
+        bass: [
+          98.00, 98.00, 98.00, 98.00, 123.47, 123.47, 123.47, 123.47,
+          130.81, 130.81, 130.81, 130.81, 98.00, 98.00, 98.00, 98.00
+        ],
+        arpeggio: [
+          1046.50, 1318.51, 1567.98, 1318.51,
+          1174.66, 1396.91, 1760.00, 1396.91
+        ],
+        tempo: 125
+      };
       
       // Stop any existing music
       stopCurrentMusic();
-      
-      // Get current song
-      const song = songs[currentSongIndex];
       
       // Create oscillators for current song
       const mainOsc = audioContext.createOscillator();
@@ -1277,18 +1234,7 @@
             mainGain.gain.setValueAtTime(0.001, audioContext.currentTime);
           }
           melodyIndex = (melodyIndex + 1) % song.melody.length;
-          
-          // Check if melody completed full loop
-          if (melodyIndex === 0) {
-            loopCount++;
-            // Switch to next song after 3 loops
-            if (loopCount >= 3) {
-              setTimeout(() => {
-                currentSongIndex = (currentSongIndex + 1) % songs.length;
-                createBackgroundMusic(); // Play next song
-              }, 2000);
-            }
-          }
+          // Infinite loop - no need to switch songs
         }
       }
       
@@ -1584,7 +1530,7 @@
       { id: 'experience', text: '## Experience Highlights\n• 17+ years in Software Development\n• Senior Developer at BitoPro Crypto Exchange (2022-Present)\n  - Crypto Market Making Systems\n  - CFD Risk Hedging Strategies\n  - Grid Trading & Arbitrage Bots\n• Risk Manager at Phnom Penh Derivative Exchange (2017-2022)\n  - MT4/MT5 Administration & Risk Management\n  - Derivative Products Design\n• iOS Contractor for VoIP, Golf GPS, Wireless Storage Apps\n• Live Casino Gaming Systems Developer (5+ years)\n• Social Network Games Developer (Facebook Games)\n• Educational iPad Apps & Interactive Media', speed: 25 },
       { id: 'current', text: '## Current Projects\n→ Bluetooth Device Integration & AI Applications\n→ B2C Commercial Management Platform\n→ Trading Systems (Grid Trading, Arbitrage Bots)\n→ Crypto Market Making & Liquidity Provision', speed: 30 },
       { id: 'tradingChart', text: '', speed: 0, isChart: true },
-      { id: 'contact', text: '## Contact\n• BattleTag: DjFeu#3832\n• Email: magic.music@gmail.com\n• LINE: https://line.me/ti/p/e_nlMqjEtK\n• Location: Taipei, Taiwan 📍\n• Maps: https://maps.app.goo.gl/7jhT75hEEWpUEoKS8', speed: 40 },
+      { id: 'contact', text: '## Contact\n• BattleTag: DjFeu#3832\n• Email: magic.music@gmail.com\n• LINE: e_nlMqjEtK\n• Location: Taipei, Taiwan 📍\n• Maps: https://maps.app.goo.gl/7jhT75hEEWpUEoKS8', speed: 40 },
       { id: 'formula', text: '', speed: 0, isFormula: true }
     ];
 
@@ -1873,9 +1819,9 @@
       
       if (isMuted) {
         btn.textContent = '🔇';
-        // Mute MOD audio
-        if (window.modAudio) {
-          window.modAudio.volume = 0;
+        // Pause SoundCloud
+        if (window.scWidget) {
+          window.scWidget.pause();
         }
         // Stop generated music if playing
         if (backgroundGain) {
@@ -1883,10 +1829,9 @@
         }
       } else {
         btn.textContent = '🔊';
-        // Unmute MOD audio
-        if (window.modAudio) {
-          window.modAudio.volume = 0.3;
-          window.modAudio.play().catch(e => console.log('Audio play failed'));
+        // Resume SoundCloud
+        if (window.scWidget) {
+          window.scWidget.play();
         }
         // Resume generated music if playing
         if (backgroundGain) {
