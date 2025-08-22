@@ -36,11 +36,11 @@
       z-index: 1;
     }
 
-    /* Terminal Container */
+    /* Terminal Container - Wider for better content display */
     #terminal {
       position: relative;
       z-index: 10;
-      max-width: 900px;
+      max-width: 1100px; /* Increased from 900px */
       margin: 0 auto;
       padding: 40px 20px;
       min-height: 100vh;
@@ -109,66 +109,72 @@
     }
 
     .typing-container {
-      margin-bottom: 20px;
-      font-size: 16px;
+      margin-bottom: 25px;
+      font-size: 18px; /* Increased for command visibility */
       line-height: 1.8;
+      font-family: 'Fira Code', monospace;
     }
 
     h1.typed {
-      font-size: 48px;
+      font-size: 56px; /* Increased from 48px for better hierarchy */
       color: #00ffff;
       text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
       font-weight: 700;
-      letter-spacing: 3px;
+      letter-spacing: 4px;
       font-family: 'Share Tech Mono', 'Fira Code', monospace;
       text-transform: uppercase;
+      line-height: 1.2;
     }
 
     h2.typed {
-      font-size: 20px;
+      font-size: 24px; /* Increased from 20px for better readability */
       color: #ffff00;
       text-shadow: 0 0 10px #ffff00, 0 0 20px #ffff00;
-      margin-bottom: 25px;
+      margin-bottom: 30px;
       letter-spacing: 2px;
       font-family: 'VT323', 'Fira Code', monospace;
       font-weight: 400;
+      line-height: 1.4;
     }
 
     p.typed {
-      font-size: 14px;
+      font-size: 16px; /* Increased from 14px for better readability */
       color: #00ff00;
-      line-height: 1.8;
+      line-height: 1.9;
       max-width: 100%;
       text-shadow: 0 0 3px #00ff00;
       font-family: 'Fira Code', 'Space Mono', monospace;
-      font-weight: 300;
+      font-weight: 400; /* Increased from 300 for better readability */
+      letter-spacing: 0.5px;
     }
 
     /* Skills and Experience sections */
     pre.typed {
       font-family: 'Fira Code', 'Space Mono', monospace;
-      font-size: 13px;
+      font-size: 15px; /* Increased from 13px */
       color: #00ff00;
-      line-height: 1.6;
+      line-height: 1.8; /* Increased line height for better readability */
       text-shadow: 0 0 3px #00ff00;
       white-space: pre-wrap;
-      margin: 20px 0;
+      margin: 25px 0;
       font-weight: 400;
+      letter-spacing: 0.3px;
     }
 
     .skills-section, .experience-section, .current-section {
       border-left: 3px solid #00ff00;
-      padding-left: 20px;
-      margin: 25px 0;
+      padding-left: 25px; /* Increased padding */
+      margin: 30px 0; /* Increased margin */
     }
 
     .contact-section {
       border: 1px solid #00ff00;
-      padding: 15px;
+      padding: 20px; /* Increased padding */
       border-radius: 5px;
       background: rgba(0, 255, 0, 0.05);
-      margin: 25px 0;
+      margin: 30px 0;
+      font-size: 15px; /* Set explicit font size */
     }
 
     .contact-section a {
@@ -348,13 +354,14 @@
     }
 
     .formula-text {
-      font-size: 32px;
+      font-size: 36px; /* Increased for emphasis */
       color: #ff0000;
       font-weight: bold;
-      font-family: 'VT323', 'Fira Code', monospace;
+      font-family: 'Fira Code', 'VT323', monospace; /* Switched order for better formula display */
       animation: redPulse 1.5s infinite;
       display: block;
-      letter-spacing: 2px;
+      letter-spacing: 3px;
+      white-space: nowrap; /* Prevent line breaks */
     }
 
     @keyframes redPulse {
@@ -502,10 +509,35 @@
 
     /* Responsive */
     @media (max-width: 768px) {
-      h1.typed { font-size: 32px; }
-      h2.typed { font-size: 16px; }
-      p.typed { font-size: 14px; }
-      .terminal-body { padding: 20px; }
+      h1.typed { 
+        font-size: 36px; /* Increased from 32px */
+        letter-spacing: 2px;
+      }
+      h2.typed { 
+        font-size: 20px; /* Increased from 16px */
+        margin-bottom: 20px;
+      }
+      p.typed { 
+        font-size: 15px; /* Increased from 14px */
+        line-height: 1.7;
+      }
+      pre.typed {
+        font-size: 14px; /* Mobile font size for pre */
+        line-height: 1.6;
+      }
+      .terminal-body { 
+        padding: 15px; /* Slightly reduced for more content space */
+      }
+      .terminal-window {
+        margin: 0 10px; /* Add some margin on mobile */
+      }
+      .formula-text {
+        font-size: 24px; /* Smaller on mobile to fit single line */
+        letter-spacing: 1px;
+      }
+      .typing-container {
+        font-size: 16px;
+      }
       
       #terminal {
         padding-top: 30px;
