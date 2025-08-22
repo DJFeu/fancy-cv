@@ -1066,6 +1066,29 @@
     let backgroundGain = null; // Keep for fallback music
     let isMuted = false;
     let isAudioInitialized = false;
+    
+    // Check browser autoplay support
+    async function checkAutoplaySupport() {
+      try {
+        // Check if browser has autoplay policy API
+        if (navigator.getAutoplayPolicy) {
+          const policy = navigator.getAutoplayPolicy('mediaelement');
+          return policy !== 'disallowed';
+        }
+        
+        // Test actual playback capability with silent audio
+        const testAudio = new Audio();
+        testAudio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+        testAudio.volume = 0;
+        await testAudio.play();
+        testAudio.pause();
+        return true;
+        
+      } catch (error) {
+        console.log('Autoplay not supported, user interaction required');
+        return false;
+      }
+    }
 
     function initAudioSystem() {
       if (isAudioInitialized) return;
@@ -1073,8 +1096,14 @@
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
       isAudioInitialized = true;
       
-      // Initialize music based on device type
-      initModPlayer();
+      // Check autoplay support and initialize music
+      checkAutoplaySupport().then(canAutoplay => {
+        console.log('Autoplay supported:', canAutoplay);
+        if (canAutoplay) {
+          window.userHasInteracted = true; // Desktop browsers typically allow autoplay
+        }
+        initModPlayer();
+      });
     }
 
     // Initialize music player - use SoundCloud for all devices
@@ -1088,8 +1117,8 @@
       iframe.scrolling = 'no';
       iframe.frameborder = 'no';
       iframe.allow = 'autoplay';
-      // SoundCloud URL with auto_play and single track looping
-      iframe.src = 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/238369911&color=%2300ff00&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false&single_active=false&show_artwork=false';
+      // SoundCloud URL WITHOUT auto_play to comply with mobile browser policies
+      iframe.src = 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/238369911&color=%2300ff00&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false&single_active=false&show_artwork=false';
       
       // Hide the iframe visually but keep audio
       iframe.style.position = 'fixed';
@@ -1114,25 +1143,26 @@
         const widget = SC.Widget(iframe);
         window.scWidget = widget;
         
-        // Set volume
-        widget.setVolume(30);
+        widget.bind(SC.Widget.Events.READY, function() {
+          // Set volume
+          widget.setVolume(30);
+          
+          // Only play if user has already interacted with the page
+          if (window.userHasInteracted) {
+            if (!isMuted) {
+              widget.play();
+            }
+          } else {
+            // Mark that we have pending music to play after user interaction
+            window.pendingSoundCloudPlay = true;
+          }
+        });
         
         // Loop the track infinitely
         widget.bind(SC.Widget.Events.FINISH, function() {
           widget.seekTo(0); // Reset to beginning
           widget.play(); // Play again
         });
-        
-        // Also ensure looping is enabled
-        widget.bind(SC.Widget.Events.READY, function() {
-          // Set to loop mode if available
-          widget.play();
-        });
-        
-        // Auto play based on mute state
-        if (!isMuted) {
-          widget.play();
-        }
       };
       document.body.appendChild(script);
     }
@@ -1335,7 +1365,7 @@
       { id: 'experience', text: '## Experience Highlights\n• 17+ years in Software Development\n• Senior Developer at BitoPro Crypto Exchange (2022-Present)\n  - Crypto Market Making Systems\n  - CFD Risk Hedging Strategies\n  - Grid Trading & Arbitrage Bots\n• Risk Manager at Phnom Penh Derivative Exchange (2017-2022)\n  - MT4/MT5 Administration & Risk Management\n  - Derivative Products Design\n• iOS Contractor for VoIP, Golf GPS, Wireless Storage Apps\n• Live Casino Gaming Systems Developer (5+ years)\n• Social Network Games Developer (Facebook Games)\n• Educational iPad Apps & Interactive Media', speed: 25 },
       { id: 'current', text: '## Current Projects\n→ Bluetooth Device Integration & AI Applications\n→ B2C Commercial Management Platform\n→ Trading Systems (Grid Trading, Arbitrage Bots)\n→ Crypto Market Making & Liquidity Provision', speed: 30 },
       { id: 'tradingChart', text: '', speed: 0, isChart: true },
-      { id: 'contact', text: '## Contact\n• BattleTag: DjFeu#3832\n• Email: magic.music@gmail.com\n• LINE: djfeu\n        https://line.me/ti/p/djfeu\n• Location: Taipei, Taiwan\n• Maps: https://maps.app.goo.gl/7jhT75hEEWpUEoKS8', speed: 40 },
+      { id: 'contact', text: '## Contact\n• BattleTag: DjFeu#3832\n• Email: magic.music@gmail.com\n• LINE: djfeu\n       https://line.me/ti/p/djfeu\n• Location: Taipei, Taiwan\n• Maps: https://maps.app.goo.gl/7jhT75hEEWpUEoKS8', speed: 40 },
       { id: 'formula', text: '', speed: 0, isFormula: true }
     ];
 
@@ -1689,10 +1719,27 @@
       const startOverlay = document.getElementById('startOverlay');
       if (startOverlay) {
         startOverlay.addEventListener('click', () => {
+          // Mark that user has interacted with the page
+          window.userHasInteracted = true;
+          
           // Initialize audio
           initAudioSystem();
           if (audioContext) {
             audioContext.resume();
+          }
+          
+          // If SoundCloud widget is ready and music is pending, start playing
+          if (window.pendingSoundCloudPlay && window.scWidget && !isMuted) {
+            window.scWidget.play().catch(error => {
+              console.log('SoundCloud play failed:', error);
+              // Fallback: try again after a small delay
+              setTimeout(() => {
+                if (window.scWidget && !isMuted) {
+                  window.scWidget.play();
+                }
+              }, 100);
+            });
+            window.pendingSoundCloudPlay = false;
           }
           
           // Hide overlay
@@ -1710,6 +1757,19 @@
 
     // Also allow clicking anywhere to start audio if not started
     document.addEventListener('click', () => {
+      // Mark user interaction
+      if (!window.userHasInteracted) {
+        window.userHasInteracted = true;
+        
+        // Try to play pending SoundCloud music
+        if (window.pendingSoundCloudPlay && window.scWidget && !isMuted) {
+          window.scWidget.play().catch(error => {
+            console.log('SoundCloud play on click failed:', error);
+          });
+          window.pendingSoundCloudPlay = false;
+        }
+      }
+      
       if (!isAudioInitialized) {
         initAudioSystem();
       }
