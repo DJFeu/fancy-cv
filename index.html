@@ -346,17 +346,17 @@
 
     /* Kelly Formula - 修正溢出和置中問題 */
     .kelly-formula {
-      margin: 30px auto; /* 使用 auto 置中 */
+      margin: 30px 0; /* 改為與其他區塊相同的 margin */
       padding: 20px;
       border: 2px solid #ff0000;
       border-radius: 10px;
       text-align: center;
       background: rgba(255, 0, 0, 0.1);
       display: none;
-      overflow-x: auto; /* 添加水平滾動 */
-      max-width: fit-content; /* 改為 fit-content 讓寬度自適應內容 */
-      width: auto; /* 寬度自動 */
+      overflow: hidden; /* 改為 hidden 防止溢出 */
+      width: 100%; /* 使用 100% 寬度與其他區塊對齊 */
       box-sizing: border-box;
+      position: relative;
     }
 
     .formula-text {
@@ -365,10 +365,91 @@
       font-weight: bold;
       font-family: 'Fira Code', 'VT323', monospace;
       animation: redPulse 1.5s infinite;
-      display: inline-block; /* 改為 inline-block */
+      display: inline-block;
       letter-spacing: 3px;
       white-space: nowrap;
-      padding: 0 10px; /* 添加內邊距 */
+      padding: 0 10px;
+      position: relative;
+      z-index: 2;
+    }
+    
+    /* Decorative hearts and dollars */
+    .formula-decoration {
+      position: absolute;
+      font-size: 24px;
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    .decoration-left {
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    
+    .decoration-right {
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    
+    .heart {
+      color: #ff69b4;
+      animation: heartbeat 1.5s ease-in-out infinite;
+    }
+    
+    .dollar {
+      color: #00ff00;
+      animation: dollarSpin 2s linear infinite;
+      text-shadow: 0 0 10px #00ff00;
+    }
+    
+    @keyframes heartbeat {
+      0%, 100% { 
+        transform: translateY(-50%) scale(1);
+        opacity: 0.8;
+      }
+      25% { 
+        transform: translateY(-50%) scale(1.1);
+        opacity: 1;
+      }
+      50% { 
+        transform: translateY(-50%) scale(0.95);
+        opacity: 0.9;
+      }
+      75% { 
+        transform: translateY(-50%) scale(1.05);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes dollarSpin {
+      0% { 
+        transform: translateY(-50%) rotateY(0deg) scale(1);
+      }
+      25% {
+        transform: translateY(-50%) rotateY(90deg) scale(1.1);
+      }
+      50% { 
+        transform: translateY(-50%) rotateY(180deg) scale(1);
+      }
+      75% {
+        transform: translateY(-50%) rotateY(270deg) scale(1.1);
+      }
+      100% { 
+        transform: translateY(-50%) rotateY(360deg) scale(1);
+      }
+    }
+    
+    @keyframes float {
+      0%, 100% { 
+        transform: translateY(-50%) translateX(0);
+      }
+      33% { 
+        transform: translateY(-55%) translateX(-5px);
+      }
+      66% { 
+        transform: translateY(-45%) translateX(5px);
+      }
     }
 
     @keyframes redPulse {
@@ -598,16 +679,33 @@
       
       /* Kelly 公式 - 關鍵修正 */
       .kelly-formula {
-        margin: 20px 10px; /* 正常 margin 確保置中 */
+        margin: 20px 0; /* 與其他區塊對齊 */
         padding: 15px 10px;
         border-radius: 5px;
-        max-width: calc(100% - 20px); /* 限制寬度並保持置中 */
+        width: 100%; /* 使用 100% 寬度 */
       }
       
       .formula-text {
         font-size: 20px; /* 大幅縮小字體 */
         letter-spacing: 1px;
         padding: 0 5px;
+      }
+      
+      .formula-decoration {
+        font-size: 16px;
+      }
+      
+      .decoration-left {
+        left: 10px;
+      }
+      
+      .decoration-right {
+        right: 10px;
+      }
+      
+      .heart, .dollar {
+        display: inline-block;
+        margin: 0 2px;
       }
       
       /* 音樂控制按鈕 */
@@ -691,14 +789,22 @@
       }
       
       .kelly-formula {
-        margin: 15px 10px; /* 正常 margin 確保置中 */
+        margin: 15px 0; /* 與其他區塊對齊 */
         padding: 12px 8px;
-        max-width: calc(100% - 20px); /* 限制寬度並保持置中 */
+        width: 100%; /* 使用 100% 寬度 */
       }
       
       .formula-text {
         font-size: 18px; /* 更小的字體 */
         letter-spacing: 0.5px;
+      }
+      
+      .formula-decoration {
+        font-size: 14px;
+      }
+      
+      .decoration-left, .decoration-right {
+        display: none; /* 在超小螢幕隱藏裝飾 */
       }
       
       .btn-buy, .btn-sell {
@@ -781,7 +887,17 @@
         <pre class="typed contact-section" id="contact" style="display: none;"></pre>
         
         <div class="kelly-formula" id="formula">
+          <span class="formula-decoration decoration-left">
+            <span class="heart">❤️</span>
+            <span class="dollar" style="margin-left: 10px;">$</span>
+            <span class="heart" style="margin-left: 10px;">💕</span>
+          </span>
           <span class="formula-text">f* = (p × b - q) / b</span>
+          <span class="formula-decoration decoration-right">
+            <span class="heart">💕</span>
+            <span class="dollar" style="margin-right: 10px;">$</span>
+            <span class="heart" style="margin-right: 10px;">❤️</span>
+          </span>
         </div>
       </div>
     </div>
