@@ -1073,22 +1073,15 @@
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
       isAudioInitialized = true;
       
-      // Initialize MOD player instead of generated music
+      // Initialize music based on device type
       initModPlayer();
     }
 
-    // Initialize music player - 8-bit for mobile, SoundCloud for desktop
+    // Initialize music player - use SoundCloud for all devices
     function initModPlayer() {
-      // Check if mobile device
-      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      console.log('Initializing SoundCloud music player');
       
-      if (isMobileDevice) {
-        // Use 8-bit generated music for mobile (better compatibility)
-        console.log('Mobile detected - using 8-bit generated music');
-        createBackgroundMusic();
-      } else {
-        // Use SoundCloud for desktop
-        console.log('Desktop detected - using SoundCloud music');
+      // Create SoundCloud iframe player for all devices
         
         // Create SoundCloud iframe player
         const iframe = document.createElement('iframe');
@@ -1147,217 +1140,8 @@
       }
     }
 
-    // Generated 8-bit MacGyver Theme
-    function createBackgroundMusic() {
-      // Classic MacGyver theme in 8-bit style
-      const song = {
-        name: "MacGyver Theme",
-        // Main melody - heroic MacGyver theme
-        melody: [
-          // Opening phrase (C-E-G ascending heroic motif)
-          261.63, 329.63, 392.00, 0, 392.00, 0, 329.63, 0,
-          349.23, 329.63, 293.66, 0, 261.63, 0, 0, 0,
-          // Main theme
-          392.00, 0, 392.00, 329.63, 392.00, 0, 523.25, 0,
-          493.88, 0, 440.00, 0, 392.00, 0, 349.23, 0,
-          329.63, 0, 329.63, 261.63, 329.63, 0, 392.00, 0,
-          349.23, 0, 329.63, 0, 293.66, 0, 261.63, 0,
-          // Build up section
-          293.66, 329.63, 349.23, 392.00, 440.00, 0, 493.88, 0,
-          523.25, 0, 493.88, 440.00, 392.00, 0, 349.23, 0,
-          // Triumphant resolution
-          392.00, 0, 440.00, 0, 523.25, 0, 587.33, 0,
-          523.25, 0, 440.00, 0, 392.00, 0, 0, 0,
-          329.63, 349.23, 392.00, 0, 440.00, 493.88, 523.25, 0,
-          523.25, 0, 392.00, 0, 261.63, 0, 0, 0
-        ],
-        // Action-packed bassline
-        bass: [
-          130.81, 130.81, 130.81, 130.81, // C
-          98.00, 98.00, 98.00, 98.00,     // G
-          87.31, 87.31, 87.31, 87.31,     // F
-          130.81, 130.81, 130.81, 130.81  // C
-        ],
-        // Percussive arpeggio pattern
-        arpeggio: [
-          523.25, 0, 784.00, 0, 1046.50, 0, 784.00, 0,
-          659.25, 0, 880.00, 0, 1108.73, 0, 880.00, 0
-        ],
-        tempo: 135 // Energetic tempo for action feel
-      };
-      
-      // Stop any existing music
-      stopCurrentMusic();
-      
-      // Create oscillators for current song
-      const mainOsc = audioContext.createOscillator();
-      const bassOsc = audioContext.createOscillator();
-      const leadOsc = audioContext.createOscillator();
-      const noiseOsc = audioContext.createOscillator();
-      
-      const mainGain = audioContext.createGain();
-      const bassGain = audioContext.createGain();
-      const leadGain = audioContext.createGain();
-      const noiseGain = audioContext.createGain();
-      
-      const filter = audioContext.createBiquadFilter();
-      const bitcrusher = audioContext.createWaveShaper();
-      
-      // Create bit crusher effect for 8-bit sound
-      const bits = 4;
-      const normfreq = 22050;
-      const step = Math.pow(1/2, bits);
-      const phaser = 1 / step;
-      
-      const curve = new Float32Array(normfreq);
-      for (let i = 0; i < normfreq; i++) {
-        const x = (i * 2) / normfreq - 1;
-        curve[i] = Math.round(x * phaser) / phaser;
-      }
-      bitcrusher.curve = curve;
-      bitcrusher.oversample = 'none';
-      
-      // Configure oscillators
-      mainOsc.type = 'square';
-      bassOsc.type = 'triangle';
-      leadOsc.type = 'square';
-      noiseOsc.type = 'sawtooth';
-      
-      filter.type = 'lowpass';
-      filter.frequency.value = 3000;
-      filter.Q.value = 1;
-      
-      // Track indices
-      let melodyIndex = 0;
-      let bassIndex = 0;
-      let arpIndex = 0;
-      let tickCount = 0;
-      let loopCount = 0;
-      
-      // Store oscillators for cleanup
-      musicOscillators = [mainOsc, bassOsc, leadOsc, noiseOsc];
-      backgroundOscillator = mainOsc;
-      backgroundGain = mainGain;
-      
-      // Play main melody
-      function playMelody() {
-        if (!isMuted && audioContext && audioContext.state === 'running') {
-          const freq = song.melody[melodyIndex];
-          if (freq > 0) {
-            mainOsc.frequency.setValueAtTime(freq, audioContext.currentTime);
-            mainGain.gain.setValueAtTime(0.15, audioContext.currentTime);
-            mainGain.gain.setValueAtTime(0.15, audioContext.currentTime + 0.05);
-            mainGain.gain.exponentialRampToValueAtTime(0.08, audioContext.currentTime + 0.1);
-          } else {
-            mainGain.gain.setValueAtTime(0.001, audioContext.currentTime);
-          }
-          melodyIndex = (melodyIndex + 1) % song.melody.length;
-          // Infinite loop - no need to switch songs
-        }
-      }
-      
-      // Play bass line
-      function playBass() {
-        if (!isMuted && audioContext && audioContext.state === 'running') {
-          const freq = song.bass[bassIndex];
-          bassOsc.frequency.setValueAtTime(freq, audioContext.currentTime);
-          bassGain.gain.setValueAtTime(0.1, audioContext.currentTime);
-          bassGain.gain.setValueAtTime(0.1, audioContext.currentTime + 0.1);
-          bassGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
-          bassIndex = (bassIndex + 1) % song.bass.length;
-        }
-      }
-      
-      // Play lead arpeggio
-      function playArpeggio() {
-        if (!isMuted && audioContext && audioContext.state === 'running') {
-          tickCount++;
-          if (tickCount % 2 === 0) {
-            const freq = song.arpeggio[arpIndex];
-            leadOsc.frequency.setValueAtTime(freq, audioContext.currentTime);
-            leadGain.gain.setValueAtTime(0.03, audioContext.currentTime);
-            leadGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.03);
-            arpIndex = (arpIndex + 1) % song.arpeggio.length;
-          }
-        }
-      }
-      
-      // Play drums
-      function playDrum() {
-        if (!isMuted && audioContext && audioContext.state === 'running') {
-          if (tickCount % 8 === 0 || tickCount % 8 === 4) {
-            noiseOsc.frequency.setValueAtTime(60, audioContext.currentTime);
-            noiseGain.gain.setValueAtTime(0.15, audioContext.currentTime);
-            noiseGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
-          } else if (tickCount % 8 === 2 || tickCount % 8 === 6) {
-            noiseOsc.frequency.setValueAtTime(200, audioContext.currentTime);
-            noiseGain.gain.setValueAtTime(0.05, audioContext.currentTime);
-            noiseGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.02);
-          }
-        }
-      }
-      
-      // Start playing immediately
-      playMelody();
-      playBass();
-      playArpeggio();
-      playDrum();
-      
-      // Set up intervals based on song tempo
-      const melodyInterval = setInterval(() => {
-        playMelody();
-        playDrum();
-      }, song.tempo);
-      const bassInterval = setInterval(playBass, song.tempo * 2);
-      const arpInterval = setInterval(playArpeggio, song.tempo / 2);
-      
-      // Store intervals for cleanup
-      musicIntervals = [melodyInterval, bassInterval, arpInterval];
-      
-      // Connect audio nodes
-      mainOsc.connect(bitcrusher);
-      bitcrusher.connect(filter);
-      filter.connect(mainGain);
-      mainGain.connect(audioContext.destination);
-      
-      bassOsc.connect(bassGain);
-      bassGain.connect(audioContext.destination);
-      
-      leadOsc.connect(leadGain);
-      leadGain.connect(audioContext.destination);
-      
-      noiseOsc.connect(noiseGain);
-      noiseGain.connect(audioContext.destination);
-      
-      // Start oscillators
-      mainOsc.start();
-      bassOsc.start();
-      leadOsc.start();
-      noiseOsc.start();
-      
-      // Set initial volumes (audible levels)
-      mainGain.gain.value = isMuted ? 0 : 0.15;
-      bassGain.gain.value = isMuted ? 0 : 0.12;
-      leadGain.gain.value = isMuted ? 0 : 0.10;
-      noiseGain.gain.value = isMuted ? 0 : 0.08;
-    }
-    
-    // Function to stop current music
-    function stopCurrentMusic() {
-      // Clear all intervals
-      musicIntervals.forEach(interval => clearInterval(interval));
-      musicIntervals = [];
-      
-      // Stop all oscillators
-      musicOscillators.forEach(osc => {
-        try {
-          osc.stop();
-        } catch (e) {
-          // Oscillator might already be stopped
-        }
-      });
-      musicOscillators = [];
-    }
+    // Placeholder for future use
+    // Music is handled by SoundCloud embed
 
     // Typing sound effect - realistic keyboard press
     function playTypingSound() {
@@ -1554,7 +1338,7 @@
       { id: 'experience', text: '## Experience Highlights\n• 17+ years in Software Development\n• Senior Developer at BitoPro Crypto Exchange (2022-Present)\n  - Crypto Market Making Systems\n  - CFD Risk Hedging Strategies\n  - Grid Trading & Arbitrage Bots\n• Risk Manager at Phnom Penh Derivative Exchange (2017-2022)\n  - MT4/MT5 Administration & Risk Management\n  - Derivative Products Design\n• iOS Contractor for VoIP, Golf GPS, Wireless Storage Apps\n• Live Casino Gaming Systems Developer (5+ years)\n• Social Network Games Developer (Facebook Games)\n• Educational iPad Apps & Interactive Media', speed: 25 },
       { id: 'current', text: '## Current Projects\n→ Bluetooth Device Integration & AI Applications\n→ B2C Commercial Management Platform\n→ Trading Systems (Grid Trading, Arbitrage Bots)\n→ Crypto Market Making & Liquidity Provision', speed: 30 },
       { id: 'tradingChart', text: '', speed: 0, isChart: true },
-      { id: 'contact', text: '## Contact\n• BattleTag: DjFeu#3832\n• Email: magic.music@gmail.com\n• LINE: djfeu\n  https://line.me/ti/p/djfeu\n• Location: Taipei, Taiwan\n• Maps: https://maps.app.goo.gl/7jhT75hEEWpUEoKS8', speed: 40 },
+      { id: 'contact', text: '## Contact\n• BattleTag: DjFeu#3832\n• Email: magic.music@gmail.com\n• LINE: djfeu\n        https://line.me/ti/p/djfeu\n• Location: Taipei, Taiwan\n• Maps: https://maps.app.goo.gl/7jhT75hEEWpUEoKS8', speed: 40 },
       { id: 'formula', text: '', speed: 0, isFormula: true }
     ];
 
@@ -1862,27 +1646,18 @@
     document.getElementById('muteBtn').addEventListener('click', () => {
       isMuted = !isMuted;
       const btn = document.querySelector('.music-btn');
-      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       
       if (isMuted) {
         btn.textContent = '🔇';
-        // Handle based on device type
-        if (!isMobileDevice && window.scWidget) {
-          // Desktop - pause SoundCloud
+        // Pause SoundCloud
+        if (window.scWidget) {
           window.scWidget.pause();
-        } else if (backgroundGain) {
-          // Mobile - stop generated music
-          backgroundGain.gain.setValueAtTime(0, audioContext.currentTime);
         }
       } else {
         btn.textContent = '🔊';
-        // Handle based on device type
-        if (!isMobileDevice && window.scWidget) {
-          // Desktop - resume SoundCloud
+        // Resume SoundCloud
+        if (window.scWidget) {
           window.scWidget.play();
-        } else if (backgroundGain) {
-          // Mobile - resume generated music
-          backgroundGain.gain.setValueAtTime(0.15, audioContext.currentTime);
         }
       }
     });
