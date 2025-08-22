@@ -1083,89 +1083,113 @@
       initModPlayer();
     }
 
-    // Initialize SoundCloud music player
+    // Initialize music player - 8-bit for mobile, SoundCloud for desktop
     function initModPlayer() {
-      // Create SoundCloud iframe player
-      const iframe = document.createElement('iframe');
-      iframe.width = '100%';
-      iframe.height = '166'; // Minimal height
-      iframe.scrolling = 'no';
-      iframe.frameborder = 'no';
-      iframe.allow = 'autoplay';
-      // SoundCloud URL with auto_play and single track looping
-      iframe.src = 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/238369911&color=%2300ff00&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false&single_active=false&show_artwork=false';
+      // Check if mobile device
+      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       
-      // Hide the iframe visually but keep audio
-      iframe.style.position = 'fixed';
-      iframe.style.bottom = '-200px';
-      iframe.style.left = '0';
-      iframe.style.width = '1px';
-      iframe.style.height = '1px';
-      iframe.style.opacity = '0';
-      iframe.style.pointerEvents = 'none';
-      iframe.style.zIndex = '-9999';
-      
-      // Add to body
-      document.body.appendChild(iframe);
-      
-      // Store iframe reference for control
-      window.soundCloudPlayer = iframe;
-      
-      // Get the widget API
-      const script = document.createElement('script');
-      script.src = 'https://w.soundcloud.com/player/api.js';
-      script.onload = function() {
-        const widget = SC.Widget(iframe);
-        window.scWidget = widget;
+      if (isMobileDevice) {
+        // Use 8-bit generated music for mobile (better compatibility)
+        console.log('Mobile detected - using 8-bit generated music');
+        createBackgroundMusic();
+      } else {
+        // Use SoundCloud for desktop
+        console.log('Desktop detected - using SoundCloud music');
         
-        // Set volume
-        widget.setVolume(30);
+        // Create SoundCloud iframe player
+        const iframe = document.createElement('iframe');
+        iframe.width = '100%';
+        iframe.height = '166'; // Minimal height
+        iframe.scrolling = 'no';
+        iframe.frameborder = 'no';
+        iframe.allow = 'autoplay';
+        // SoundCloud URL with auto_play and single track looping
+        iframe.src = 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/238369911&color=%2300ff00&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false&single_active=false&show_artwork=false';
         
-        // Loop the track infinitely
-        widget.bind(SC.Widget.Events.FINISH, function() {
-          widget.seekTo(0); // Reset to beginning
-          widget.play(); // Play again
-        });
+        // Hide the iframe visually but keep audio
+        iframe.style.position = 'fixed';
+        iframe.style.bottom = '-200px';
+        iframe.style.left = '0';
+        iframe.style.width = '1px';
+        iframe.style.height = '1px';
+        iframe.style.opacity = '0';
+        iframe.style.pointerEvents = 'none';
+        iframe.style.zIndex = '-9999';
         
-        // Also ensure looping is enabled
-        widget.bind(SC.Widget.Events.READY, function() {
-          // Set to loop mode if available
-          widget.play();
-        });
+        // Add to body
+        document.body.appendChild(iframe);
         
-        // Auto play based on mute state
-        if (!isMuted) {
-          widget.play();
-        }
-      };
-      document.body.appendChild(script);
+        // Store iframe reference for control
+        window.soundCloudPlayer = iframe;
+        
+        // Get the widget API
+        const script = document.createElement('script');
+        script.src = 'https://w.soundcloud.com/player/api.js';
+        script.onload = function() {
+          const widget = SC.Widget(iframe);
+          window.scWidget = widget;
+          
+          // Set volume
+          widget.setVolume(30);
+          
+          // Loop the track infinitely
+          widget.bind(SC.Widget.Events.FINISH, function() {
+            widget.seekTo(0); // Reset to beginning
+            widget.play(); // Play again
+          });
+          
+          // Also ensure looping is enabled
+          widget.bind(SC.Widget.Events.READY, function() {
+            // Set to loop mode if available
+            widget.play();
+          });
+          
+          // Auto play based on mute state
+          if (!isMuted) {
+            widget.play();
+          }
+        };
+        document.body.appendChild(script);
+      }
     }
 
-    // Fallback: Generated 8-bit Mario-style music (keeping as backup)
+    // Generated 8-bit MacGyver Theme
     function createBackgroundMusic() {
-      // Single Mario-style adventure theme
+      // Classic MacGyver theme in 8-bit style
       const song = {
-        name: "Mario Adventure",
+        name: "MacGyver Theme",
+        // Main melody - heroic MacGyver theme
         melody: [
-          // Main theme - upbeat and adventurous (Mario-style)
-          329.63, 329.63, 0, 329.63, 0, 261.63, 329.63, 0, 
-          392.00, 0, 0, 0, 196.00, 0, 0, 0,
-          261.63, 0, 0, 196.00, 0, 164.81, 0, 0,
-          220.00, 0, 246.94, 0, 261.63, 0, 220.00, 196.00,
-          392.00, 369.99, 349.23, 329.63, 0, 311.13, 329.63, 0,
-          349.23, 0, 392.00, 440.00, 523.25, 0, 440.00, 0,
-          587.33, 0, 523.25, 0, 493.88, 0, 440.00, 0,
-          392.00, 0, 329.63, 349.23, 329.63, 0, 261.63, 0
+          // Opening phrase (C-E-G ascending heroic motif)
+          261.63, 329.63, 392.00, 0, 392.00, 0, 329.63, 0,
+          349.23, 329.63, 293.66, 0, 261.63, 0, 0, 0,
+          // Main theme
+          392.00, 0, 392.00, 329.63, 392.00, 0, 523.25, 0,
+          493.88, 0, 440.00, 0, 392.00, 0, 349.23, 0,
+          329.63, 0, 329.63, 261.63, 329.63, 0, 392.00, 0,
+          349.23, 0, 329.63, 0, 293.66, 0, 261.63, 0,
+          // Build up section
+          293.66, 329.63, 349.23, 392.00, 440.00, 0, 493.88, 0,
+          523.25, 0, 493.88, 440.00, 392.00, 0, 349.23, 0,
+          // Triumphant resolution
+          392.00, 0, 440.00, 0, 523.25, 0, 587.33, 0,
+          523.25, 0, 440.00, 0, 392.00, 0, 0, 0,
+          329.63, 349.23, 392.00, 0, 440.00, 493.88, 523.25, 0,
+          523.25, 0, 392.00, 0, 261.63, 0, 0, 0
         ],
+        // Action-packed bassline
         bass: [
-          98.00, 98.00, 98.00, 98.00, 123.47, 123.47, 123.47, 123.47,
-          130.81, 130.81, 130.81, 130.81, 98.00, 98.00, 98.00, 98.00
+          130.81, 130.81, 130.81, 130.81, // C
+          98.00, 98.00, 98.00, 98.00,     // G
+          87.31, 87.31, 87.31, 87.31,     // F
+          130.81, 130.81, 130.81, 130.81  // C
         ],
+        // Percussive arpeggio pattern
         arpeggio: [
-          1046.50, 1318.51, 1567.98, 1318.51,
-          1174.66, 1396.91, 1760.00, 1396.91
+          523.25, 0, 784.00, 0, 1046.50, 0, 784.00, 0,
+          659.25, 0, 880.00, 0, 1108.73, 0, 880.00, 0
         ],
-        tempo: 125
+        tempo: 135 // Energetic tempo for action feel
       };
       
       // Stop any existing music
@@ -1547,12 +1571,21 @@
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
       
-      // Initialize data with more stable price range to prevent chart overflow
-      const basePrice = 100;
+      // Initialize data with steady upward trend like real stock market
+      const basePrice = 85;
+      let currentPrice = basePrice;
       for (let i = 0; i < 100; i++) {
-        // Keep initial prices within +/- 10 from base price
-        priceData.push(basePrice + (Math.random() - 0.5) * 20);
-        volumeData.push(Math.random() * 1000000);
+        // Create gradual upward trend with small fluctuations
+        const trendFactor = i * 0.15; // Gradual increase over time
+        const randomWalk = (Math.random() - 0.45) * 2; // Small random variations
+        currentPrice = basePrice + trendFactor + randomWalk;
+        
+        // Add some realistic volatility
+        if (i > 20 && i < 40) currentPrice -= 3; // Small dip
+        if (i > 60 && i < 70) currentPrice -= 2; // Another small dip
+        
+        priceData.push(currentPrice);
+        volumeData.push(300000 + Math.random() * 700000);
       }
       
       function drawChart() {
@@ -1568,17 +1601,30 @@
           ctx.stroke();
         }
         
-        // Update data (simulate realistic price movement with constraints)
+        // Update data - steady upward trend with realistic fluctuations
         priceData.shift();
         const lastPrice = priceData[priceData.length - 1];
-        const priceChange = (Math.random() - 0.48) * 1.5; // Slight downward bias to prevent runaway growth
+        const dataLength = priceData.length;
+        
+        // Overall upward bias with small fluctuations
+        const trendBias = 0.08; // Slight upward trend
+        const volatility = 0.8; // Reduced volatility for smoother movement
+        const priceChange = (Math.random() - 0.48 + trendBias) * volatility;
+        
+        // Apply smoothing to prevent sudden jumps
         let newPrice = lastPrice + priceChange;
         
-        // Keep price within reasonable bounds (80-120) to prevent chart overflow
-        if (newPrice > 120) {
-          newPrice = 120 - Math.random() * 5; // Bounce back from ceiling
-        } else if (newPrice < 80) {
-          newPrice = 80 + Math.random() * 5; // Bounce back from floor
+        // Occasional small corrections for realism
+        if (Math.random() < 0.05) { // 5% chance of small correction
+          newPrice = lastPrice - Math.random() * 1.5;
+        }
+        
+        // Keep general upward trend with soft bounds
+        const expectedPrice = 85 + dataLength * 0.15;
+        if (newPrice < expectedPrice - 10) {
+          newPrice += Math.random() * 2; // Help recover if too low
+        } else if (newPrice > expectedPrice + 10) {
+          newPrice -= Math.random() * 1; // Slight correction if too high
         }
         
         priceData.push(newPrice);
@@ -1816,25 +1862,26 @@
     document.getElementById('muteBtn').addEventListener('click', () => {
       isMuted = !isMuted;
       const btn = document.querySelector('.music-btn');
+      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       
       if (isMuted) {
         btn.textContent = '🔇';
-        // Pause SoundCloud
-        if (window.scWidget) {
+        // Handle based on device type
+        if (!isMobileDevice && window.scWidget) {
+          // Desktop - pause SoundCloud
           window.scWidget.pause();
-        }
-        // Stop generated music if playing
-        if (backgroundGain) {
+        } else if (backgroundGain) {
+          // Mobile - stop generated music
           backgroundGain.gain.setValueAtTime(0, audioContext.currentTime);
         }
       } else {
         btn.textContent = '🔊';
-        // Resume SoundCloud
-        if (window.scWidget) {
+        // Handle based on device type
+        if (!isMobileDevice && window.scWidget) {
+          // Desktop - resume SoundCloud
           window.scWidget.play();
-        }
-        // Resume generated music if playing
-        if (backgroundGain) {
+        } else if (backgroundGain) {
+          // Mobile - resume generated music
           backgroundGain.gain.setValueAtTime(0.02, audioContext.currentTime);
         }
       }
