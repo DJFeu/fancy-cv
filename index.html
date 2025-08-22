@@ -166,6 +166,160 @@
       text-shadow: 0 0 10px #00ffff;
     }
 
+    /* Trading Section */
+    .trading-section {
+      margin: 25px 0;
+      padding: 20px;
+      border: 2px solid #00ff00;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.8);
+    }
+
+    #depthChart {
+      width: 100%;
+      height: 300px;
+      border: 1px solid #00ff00;
+      border-radius: 5px;
+      background: rgba(0, 0, 0, 0.9);
+      margin-bottom: 20px;
+    }
+
+    .trading-buttons {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+    }
+
+    .btn-buy, .btn-sell {
+      flex: 1;
+      padding: 15px 30px;
+      font-size: 18px;
+      font-weight: bold;
+      font-family: 'Courier New', monospace;
+      border: 2px solid;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-buy {
+      background: rgba(0, 255, 0, 0.1);
+      border-color: #00ff00;
+      color: #00ff00;
+      animation: pulseGreen 1.5s infinite;
+    }
+
+    @keyframes pulseGreen {
+      0%, 100% {
+        box-shadow: 0 0 20px #00ff00, inset 0 0 10px rgba(0, 255, 0, 0.2);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 40px #00ff00, inset 0 0 20px rgba(0, 255, 0, 0.3);
+        transform: scale(1.05);
+      }
+    }
+
+    .btn-buy::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+      transform: translateY(-50%);
+      animation: shine 2s infinite;
+    }
+
+    @keyframes shine {
+      0% { left: -100%; }
+      50%, 100% { left: 100%; }
+    }
+
+    .btn-buy:hover {
+      background: #00ff00;
+      color: #000;
+      box-shadow: 0 0 50px #00ff00, inset 0 0 20px rgba(0, 0, 0, 0.3);
+      transform: scale(1.1);
+      animation: none;
+    }
+
+    .btn-sell {
+      background: rgba(255, 0, 0, 0.1);
+      border-color: #ff0000;
+      color: #ff0000;
+      animation: pulseRed 1.5s infinite;
+      animation-delay: 0.75s;
+    }
+
+    @keyframes pulseRed {
+      0%, 100% {
+        box-shadow: 0 0 20px #ff0000, inset 0 0 10px rgba(255, 0, 0, 0.2);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 40px #ff0000, inset 0 0 20px rgba(255, 0, 0, 0.3);
+        transform: scale(1.05);
+      }
+    }
+
+    .btn-sell::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+      transform: translateY(-50%);
+      animation: shine 2s infinite;
+      animation-delay: 1s;
+    }
+
+    .btn-sell:hover {
+      background: #ff0000;
+      color: #fff;
+      box-shadow: 0 0 50px #ff0000, inset 0 0 20px rgba(0, 0, 0, 0.3);
+      transform: scale(1.1);
+      animation: none;
+    }
+
+    .btn-buy:active, .btn-sell:active {
+      transform: scale(0.95);
+    }
+
+    /* Scroll indicator */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      z-index: 100;
+      display: none;
+    }
+
+    .scroll-indicator.active {
+      display: block;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .scroll-text {
+      color: #00ff00;
+      font-size: 12px;
+      text-shadow: 0 0 10px #00ff00;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+    }
+
     /* Kelly Formula */
     .kelly-formula {
       margin-top: 30px;
@@ -184,13 +338,6 @@
       font-family: 'Courier New', monospace;
       animation: redPulse 1.5s infinite;
       display: block;
-      margin-bottom: 10px;
-    }
-
-    .formula-desc {
-      font-size: 14px;
-      color: #ff6666;
-      font-style: italic;
     }
 
     @keyframes redPulse {
@@ -386,10 +533,20 @@
         <pre class="typed skills-section" id="skills"></pre>
         <pre class="typed experience-section" id="experience"></pre>
         <pre class="typed current-section" id="current"></pre>
-        <pre class="typed contact-section" id="contact"></pre>
+        
+        <!-- Trading Chart Section -->
+        <div class="trading-section" id="tradingSection" style="display: none;">
+          <canvas id="depthChart"></canvas>
+          <div class="trading-buttons">
+            <button class="btn-buy" id="buyBtn">MARKET BUY</button>
+            <button class="btn-sell" id="sellBtn">MARKET SELL</button>
+          </div>
+        </div>
+        
+        <pre class="typed contact-section" id="contact" style="display: none;"></pre>
+        
         <div class="kelly-formula" id="formula">
           <span class="formula-text">f* = (p × b - q) / b</span>
-          <span class="formula-desc">// Kelly Criterion: Optimal position sizing for maximum growth</span>
         </div>
       </div>
     </div>
@@ -404,15 +561,22 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   
   <script>
-    // 3D Matrix Rain Effect with Three.js
+    // 3D Matrix Rain Effect with Three.js - Optimized for mobile
+    let animationId;
+    let isPageVisible = true;
+    
+    // Check if mobile device
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
     const canvas = document.getElementById('matrix-canvas');
     const renderer = new THREE.WebGLRenderer({ 
       canvas: canvas,
-      antialias: false,
-      alpha: false
+      antialias: !isMobile, // Disable antialiasing on mobile
+      alpha: false,
+      powerPreference: "low-power" // Use low power mode for mobile
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
@@ -430,15 +594,27 @@
     const matrixChars = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+-=[]{}|;:,.<>?";
     const charArray = matrixChars.split('');
 
-    // Create texture for characters
+    // Reduce complexity for mobile
+    const columns = isMobile ? 40 : 80;
+    const rows = isMobile ? 20 : 30;
+    const spacing = 1.5;
+    
+    // Create texture cache
+    const textureCache = new Map();
+    
+    // Create texture for characters with caching
     function createTextTexture(char) {
-      const size = 256;
+      if (textureCache.has(char)) {
+        return textureCache.get(char);
+      }
+      
+      const size = isMobile ? 128 : 256; // Smaller texture for mobile
       const canvas = document.createElement('canvas');
       canvas.width = size;
       canvas.height = size;
       
       const context = canvas.getContext('2d');
-      context.font = 'bold 200px monospace';
+      context.font = `bold ${size * 0.8}px monospace`;
       context.fillStyle = '#00ff00';
       context.textAlign = 'center';
       context.textBaseline = 'middle';
@@ -446,14 +622,10 @@
       
       const texture = new THREE.CanvasTexture(canvas);
       texture.needsUpdate = true;
+      textureCache.set(char, texture);
       return texture;
     }
 
-    // Matrix columns
-    const columns = 80;
-    const rows = 30;
-    const spacing = 1.5;
-    
     // Create matrix rain particles
     const matrixGroup = new THREE.Group();
     const matrixColumns = [];
@@ -505,77 +677,119 @@
     let time = 0;
     const clock = new THREE.Clock();
 
-    // Matrix animation
+    // Matrix animation - optimized
     function animateMatrix() {
-      requestAnimationFrame(animateMatrix);
+      if (!isPageVisible) return;
+      
+      animationId = requestAnimationFrame(animateMatrix);
       
       const deltaTime = clock.getDelta();
       time += deltaTime;
 
-      // Animate each column
-      matrixColumns.forEach((column, colIndex) => {
-        column.forEach((mesh, rowIndex) => {
-          const userData = mesh.userData;
-          
-          // Create falling effect
-          if (time > userData.delay * 0.1) {
-            mesh.position.y -= userData.speed;
+      // Reduce update frequency on mobile
+      const updateFrequency = isMobile ? 2 : 1;
+      
+      if (Math.floor(time * 60) % updateFrequency === 0) {
+        // Animate each column
+        matrixColumns.forEach((column, colIndex) => {
+          column.forEach((mesh, rowIndex) => {
+            const userData = mesh.userData;
             
-            // Reset position when reaching bottom
-            if (mesh.position.y < -rows/2 * spacing) {
-              mesh.position.y = rows/2 * spacing;
-              // Change character
-              const newChar = charArray[Math.floor(Math.random() * charArray.length)];
-              mesh.material.map = createTextTexture(newChar);
-              userData.char = newChar;
-              userData.speed = 0.1 + Math.random() * 0.3;
+            // Create falling effect
+            if (time > userData.delay * 0.1) {
+              mesh.position.y -= userData.speed;
+              
+              // Reset position when reaching bottom
+              if (mesh.position.y < -rows/2 * spacing) {
+                mesh.position.y = rows/2 * spacing;
+                // Change character less frequently on mobile
+                if (!isMobile || Math.random() > 0.5) {
+                  const newChar = charArray[Math.floor(Math.random() * charArray.length)];
+                  mesh.material.map = createTextTexture(newChar);
+                  userData.char = newChar;
+                }
+                userData.speed = 0.1 + Math.random() * 0.3;
+              }
+              
+              // Calculate opacity based on position (trail effect)
+              const normalizedY = (mesh.position.y + rows/2 * spacing) / (rows * spacing);
+              
+              // Head of the trail is bright
+              if (rowIndex === 0 || (rowIndex < 3 && Math.random() > 0.5)) {
+                mesh.material.opacity = 1;
+                mesh.material.color = new THREE.Color(0xffffff);
+              } else {
+                // Gradient fade
+                mesh.material.opacity = normalizedY * 0.8;
+                mesh.material.color = new THREE.Color(0x00ff00);
+              }
+              
+              // Add flicker effect (less on mobile)
+              if (!isMobile && Math.random() > 0.98) {
+                mesh.material.opacity = Math.random();
+              }
             }
             
-            // Calculate opacity based on position (trail effect)
-            const normalizedY = (mesh.position.y + rows/2 * spacing) / (rows * spacing);
-            
-            // Head of the trail is bright
-            if (rowIndex === 0 || (rowIndex < 3 && Math.random() > 0.5)) {
-              mesh.material.opacity = 1;
-              mesh.material.color = new THREE.Color(0xffffff);
-            } else {
-              // Gradient fade
-              mesh.material.opacity = normalizedY * 0.8;
-              mesh.material.color = new THREE.Color(0x00ff00);
+            // Z-axis wave motion (reduced on mobile)
+            if (!isMobile) {
+              mesh.position.z = Math.sin(time * 2 + colIndex * 0.1) * 2;
+              mesh.rotation.z = Math.sin(time + colIndex * 0.1) * 0.05;
             }
-            
-            // Add flicker effect
-            if (Math.random() > 0.98) {
-              mesh.material.opacity = Math.random();
-            }
-          }
-          
-          // Z-axis wave motion
-          mesh.position.z = Math.sin(time * 2 + colIndex * 0.1) * 2;
-          
-          // Slight rotation
-          mesh.rotation.z = Math.sin(time + colIndex * 0.1) * 0.05;
+          });
         });
-      });
 
-      // Camera movement
-      camera.position.x = Math.sin(time * 0.5) * 5;
-      camera.position.y = Math.cos(time * 0.3) * 3;
-      camera.lookAt(0, 0, 0);
-
-      // Rotate entire matrix group slightly
-      matrixGroup.rotation.y = Math.sin(time * 0.2) * 0.1;
+        // Camera movement (reduced on mobile)
+        if (!isMobile) {
+          camera.position.x = Math.sin(time * 0.5) * 5;
+          camera.position.y = Math.cos(time * 0.3) * 3;
+          camera.lookAt(0, 0, 0);
+          matrixGroup.rotation.y = Math.sin(time * 0.2) * 0.1;
+        }
+      }
       
       renderer.render(scene, camera);
     }
 
+    // Start animation
     animateMatrix();
 
-    // Handle resize
+    // Handle page visibility change
+    document.addEventListener('visibilitychange', () => {
+      isPageVisible = !document.hidden;
+      
+      if (isPageVisible) {
+        clock.start();
+        animateMatrix();
+      } else {
+        if (animationId) {
+          cancelAnimationFrame(animationId);
+        }
+      }
+    });
+
+    // Handle window focus/blur
+    window.addEventListener('blur', () => {
+      isPageVisible = false;
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    });
+
+    window.addEventListener('focus', () => {
+      isPageVisible = true;
+      clock.start();
+      animateMatrix();
+    });
+
+    // Handle resize with debouncing
+    let resizeTimeout;
     window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }, 250);
     });
 
     // Audio System
@@ -864,12 +1078,106 @@
       { id: 'title', text: 'Extremely gifted pro trader & hacker.', speed: 60, isWrong: true, 
         correctText: 'A not-so-gifted trader and a bit of a loser.', deleteDelay: 1500 },
       { id: 'bio', text: "I'm a developer/trader with a passion for multimedia and trading, equally at home tinkering with code as I am exploring music or the latest in internet tech. I dabble in investing and entrepreneurship, and people usually describe me as calm, kind, and a bit of a debugging detective. I thrive on challenges, enjoy learning new things, and I'm always open to exciting collaborations—whether it's building, breaking, or boldly experimenting with the next big idea.", speed: 30 },
-      { id: 'skills', text: '## Core Skills\n> Languages: Swift, Objective-C, Python, JavaScript, SQL, PHP\n> Technologies: Socket Programming, Live Streaming, GPS/Bluetooth, Web Development\n> Platforms: iOS/macOS, Web Apps, Desktop Tools, Crawlers & Automation\n> Trading: MT4/MT5 Administrator, Risk Manager, Quantitative Trader\n> Blockchain: Crypto Exchange Systems, Web3 Development', speed: 20 },
-      { id: 'experience', text: '## Experience Highlights\n• 17+ years in Software Development\n• Senior Developer at BitoPro Crypto Exchange (2022-Present)\n• Risk Manager at Phnom Penh Derivative Exchange (2017-2022)\n• iOS Contractor for VoIP, Golf GPS, Wireless Storage Apps\n• Live Casino Gaming Systems Developer (5+ years)\n• Social Network Games Developer (Facebook Games)\n• Educational iPad Apps & Interactive Media', speed: 25 },
-      { id: 'current', text: '## Current Projects\n→ Bluetooth Device Integration & AI Applications\n→ B2C Commercial Management Platform\n→ Trading Systems (Grid Trading, Arbitrage Bots)', speed: 30 },
+      { id: 'skills', text: '## Core Skills\n> Languages: Swift, Objective-C, Python, JavaScript, SQL, PHP\n> Technologies: Socket Programming, Live Streaming, GPS/Bluetooth, Web Development\n> Platforms: iOS/macOS, Web Apps, Desktop Tools, Crawlers & Automation\n> Trading: MT4/MT5 Administrator, Risk Manager, Quantitative Trader\n> Blockchain: Crypto Exchange Systems, Web3 Development, Market Making, CFD Risk Hedging', speed: 20 },
+      { id: 'experience', text: '## Experience Highlights\n• 17+ years in Software Development\n• Senior Developer at BitoPro Crypto Exchange (2022-Present)\n  - Crypto Market Making Systems\n  - CFD Risk Hedging Strategies\n  - Grid Trading & Arbitrage Bots\n• Risk Manager at Phnom Penh Derivative Exchange (2017-2022)\n  - MT4/MT5 Administration & Risk Management\n  - Derivative Products Design\n• iOS Contractor for VoIP, Golf GPS, Wireless Storage Apps\n• Live Casino Gaming Systems Developer (5+ years)\n• Social Network Games Developer (Facebook Games)\n• Educational iPad Apps & Interactive Media', speed: 25 },
+      { id: 'current', text: '## Current Projects\n→ Bluetooth Device Integration & AI Applications\n→ B2C Commercial Management Platform\n→ Trading Systems (Grid Trading, Arbitrage Bots)\n→ Crypto Market Making & Liquidity Provision', speed: 30 },
+      { id: 'tradingChart', text: '', speed: 0, isChart: true },
       { id: 'contact', text: '## Contact\n• BattleTag: DjFeu#3832\n• Email: magic.music@gmail.com\n• LINE: https://line.me/ti/p/e_nlMqjEtK\n• Location: Taipei, Taiwan 📍 https://maps.app.goo.gl/7jhT75hEEWpUEoKS8', speed: 40 },
       { id: 'formula', text: '', speed: 0, isFormula: true }
     ];
+
+    // Depth Chart Animation
+    let chartAnimationId;
+    let priceData = [];
+    let volumeData = [];
+    
+    function initDepthChart() {
+      const canvas = document.getElementById('depthChart');
+      const ctx = canvas.getContext('2d');
+      
+      // Set canvas size
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      
+      // Initialize data
+      for (let i = 0; i < 100; i++) {
+        priceData.push(100 + Math.random() * 50);
+        volumeData.push(Math.random() * 1000000);
+      }
+      
+      function drawChart() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw grid
+        ctx.strokeStyle = 'rgba(0, 255, 0, 0.1)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 10; i++) {
+          ctx.beginPath();
+          ctx.moveTo(0, (canvas.height / 10) * i);
+          ctx.lineTo(canvas.width, (canvas.height / 10) * i);
+          ctx.stroke();
+        }
+        
+        // Update data (simulate price movement)
+        priceData.shift();
+        priceData.push(priceData[priceData.length - 1] + (Math.random() - 0.3) * 2);
+        
+        volumeData.shift();
+        volumeData.push(Math.random() * 1000000);
+        
+        // Draw price line
+        ctx.strokeStyle = '#00ff00';
+        ctx.lineWidth = 2;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#00ff00';
+        ctx.beginPath();
+        
+        for (let i = 0; i < priceData.length; i++) {
+          const x = (canvas.width / priceData.length) * i;
+          const y = canvas.height - ((priceData[i] - 50) / 100) * canvas.height;
+          
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        }
+        ctx.stroke();
+        
+        // Draw volume bars
+        ctx.fillStyle = 'rgba(0, 255, 0, 0.3)';
+        for (let i = 0; i < volumeData.length; i++) {
+          const x = (canvas.width / volumeData.length) * i;
+          const height = (volumeData[i] / 1000000) * canvas.height * 0.3;
+          ctx.fillRect(x, canvas.height - height, canvas.width / volumeData.length - 1, height);
+        }
+        
+        // Draw current price
+        const currentPrice = priceData[priceData.length - 1].toFixed(2);
+        ctx.fillStyle = '#00ff00';
+        ctx.font = 'bold 20px Courier New';
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#00ff00';
+        ctx.fillText(`${currentPrice}`, 10, 30);
+        
+        // Draw trend indicator
+        const trend = priceData[priceData.length - 1] > priceData[priceData.length - 10] ? '▲' : '▼';
+        const trendColor = trend === '▲' ? '#00ff00' : '#ff0000';
+        ctx.fillStyle = trendColor;
+        ctx.font = 'bold 30px Arial';
+        ctx.fillText(trend, canvas.width - 50, 40);
+        
+        chartAnimationId = requestAnimationFrame(drawChart);
+      }
+      
+      drawChart();
+    }
+    
+    function stopChart() {
+      if (chartAnimationId) {
+        cancelAnimationFrame(chartAnimationId);
+      }
+    }
 
     // Start typing sequence
     function startTypingSequence() {
@@ -878,27 +1186,104 @@
         if (index < texts.length) {
           const current = texts[index];
           
+          // Handle trading chart
+          if (current.isChart) {
+            setTimeout(() => {
+              const tradingSection = document.getElementById('tradingSection');
+              tradingSection.style.display = 'block';
+              initDepthChart();
+              playTypingSound();
+              index++;
+              
+              // Skip contact for now
+              const contactIndex = texts.findIndex(t => t.id === 'contact');
+              if (contactIndex > -1) {
+                index = contactIndex + 1; // Skip contact
+              }
+              
+              setTimeout(typeNext, 1000);
+            }, 500);
+          }
           // Handle Kelly formula specially
-          if (current.isFormula) {
+          else if (current.isFormula) {
             setTimeout(() => {
               const formulaDiv = document.getElementById('formula');
               formulaDiv.style.display = 'block';
-              // Add typing sound effect
               playTypingSound();
               index++;
               typeNext();
             }, 1000);
-          } else {
+          } else if (current.id !== 'contact') {
             const element = document.getElementById(current.id);
             typeWriter(element, current.text, current.speed, () => {
               index++;
               setTimeout(typeNext, 700);
             }, current.isWrong, current.correctText, current.deleteDelay);
+          } else {
+            index++;
+            typeNext();
           }
         }
       }
       setTimeout(typeNext, 500);
     }
+    
+    // Trading button handlers
+    document.addEventListener('DOMContentLoaded', () => {
+      // Buy button
+      document.getElementById('buyBtn').addEventListener('click', () => {
+        stopChart();
+        document.getElementById('tradingSection').style.display = 'none';
+        const contactEl = document.getElementById('contact');
+        contactEl.style.display = 'block';
+        
+        // Type contact info
+        const contactText = texts.find(t => t.id === 'contact');
+        typeWriter(contactEl, contactText.text, contactText.speed, () => {});
+        
+        // Play coin sound
+        if (audioContext && !isMuted) {
+          const coinOsc = audioContext.createOscillator();
+          const coinGain = audioContext.createGain();
+          coinOsc.type = 'sine';
+          coinOsc.frequency.setValueAtTime(2093, audioContext.currentTime);
+          coinOsc.frequency.exponentialRampToValueAtTime(4186, audioContext.currentTime + 0.1);
+          coinGain.gain.setValueAtTime(0.1, audioContext.currentTime);
+          coinGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+          coinOsc.connect(coinGain);
+          coinGain.connect(audioContext.destination);
+          coinOsc.start(audioContext.currentTime);
+          coinOsc.stop(audioContext.currentTime + 0.2);
+        }
+      });
+      
+      // Sell button
+      document.getElementById('sellBtn').addEventListener('click', () => {
+        stopChart();
+        document.getElementById('tradingSection').style.display = 'none';
+        const contactEl = document.getElementById('contact');
+        contactEl.style.display = 'block';
+        
+        // Type contact info
+        const contactText = texts.find(t => t.id === 'contact');
+        typeWriter(contactEl, contactText.text, contactText.speed, () => {});
+        
+        // Play error sound
+        if (audioContext && !isMuted) {
+          const errorOsc = audioContext.createOscillator();
+          const errorGain = audioContext.createGain();
+          errorOsc.type = 'sawtooth';
+          errorOsc.frequency.setValueAtTime(200, audioContext.currentTime);
+          errorOsc.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.2);
+          errorGain.gain.setValueAtTime(0.1, audioContext.currentTime);
+          errorGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+          errorOsc.connect(errorGain);
+          errorGain.connect(audioContext.destination);
+          errorOsc.start(audioContext.currentTime);
+          errorOsc.stop(audioContext.currentTime + 0.2);
+        }
+      });
+    });
 
     // Mute button handler
     document.getElementById('muteBtn').addEventListener('click', () => {
