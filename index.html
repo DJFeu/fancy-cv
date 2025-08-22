@@ -42,12 +42,12 @@
       z-index: 10;
       max-width: 1100px; /* Increased from 900px */
       margin: 0 auto;
-      padding: 40px 20px;
+      padding: 20px 20px 40px 20px; /* Reduced top padding, keep bottom padding */
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;
-      padding-top: 60px;
+      justify-content: center; /* Center content vertically */
+      padding-top: 20px; /* Reduced from 60px */
     }
 
     /* Terminal Window */
@@ -98,7 +98,7 @@
     /* Terminal Body */
     .terminal-body {
       padding: 30px;
-      min-height: 400px;
+      min-height: auto; /* Changed from 400px to auto */
     }
 
     /* Typing Text Styles */
@@ -354,7 +354,8 @@
       background: rgba(255, 0, 0, 0.1);
       display: none;
       overflow-x: auto; /* 添加水平滾動 */
-      max-width: calc(100% - 20px); /* 限制最大寬度並留邊距 */
+      max-width: fit-content; /* 改為 fit-content 讓寬度自適應內容 */
+      width: auto; /* 寬度自動 */
       box-sizing: border-box;
     }
 
@@ -517,8 +518,9 @@
     @media (max-width: 768px) {
       /* 調整 Terminal 容器 */
       #terminal {
-        padding: 20px 10px;
-        padding-top: 30px;
+        padding: 15px 10px 30px 10px;
+        padding-top: 15px;
+        justify-content: flex-start; /* Mobile: start from top */
       }
       
       /* 調整 Terminal 視窗 */
@@ -983,45 +985,76 @@
     }
 
     function createBackgroundMusic() {
-      // Create multiple oscillators for casino/arcade sound
+      // Create 8-bit chiptune style music
       const mainOsc = audioContext.createOscillator();
       const bassOsc = audioContext.createOscillator();
-      const arpeggioOsc = audioContext.createOscillator();
+      const leadOsc = audioContext.createOscillator();
+      const noiseOsc = audioContext.createOscillator();
       
       const mainGain = audioContext.createGain();
       const bassGain = audioContext.createGain();
-      const arpeggioGain = audioContext.createGain();
+      const leadGain = audioContext.createGain();
+      const noiseGain = audioContext.createGain();
       
       const filter = audioContext.createBiquadFilter();
+      const bitcrusher = audioContext.createWaveShaper();
       
-      // Configure oscillators for arcade/casino sound
+      // Create bit crusher effect for 8-bit sound
+      const bits = 4;
+      const normfreq = 22050;
+      const step = Math.pow(1/2, bits);
+      const phaser = 1 / step;
+      
+      const curve = new Float32Array(normfreq);
+      for (let i = 0; i < normfreq; i++) {
+        const x = (i * 2) / normfreq - 1;
+        curve[i] = Math.round(x * phaser) / phaser;
+      }
+      bitcrusher.curve = curve;
+      bitcrusher.oversample = 'none';
+      
+      // Configure oscillators for 8-bit sound
       mainOsc.type = 'square';
       bassOsc.type = 'triangle';
-      arpeggioOsc.type = 'square';
+      leadOsc.type = 'square';
+      noiseOsc.type = 'sawtooth';
       
       filter.type = 'lowpass';
-      filter.frequency.value = 2000;
-      filter.Q.value = 5;
+      filter.frequency.value = 3000;
+      filter.Q.value = 1;
       
-      // Casino-style melody (upbeat and playful)
+      // 8-bit style melody pattern (inspired by classic chiptune)
       const melody = [
-        261.63, 329.63, 392.00, 523.25, // C-E-G-C (ascending)
-        523.25, 392.00, 329.63, 261.63, // descending
-        293.66, 369.99, 440.00, 587.33, // D-F#-A-D
-        587.33, 440.00, 369.99, 293.66,
-        329.63, 392.00, 493.88, 659.25, // E-G-B-E
-        659.25, 493.88, 392.00, 329.63
+        // Bar 1-2: Main theme
+        329.63, 329.63, 0, 329.63, 0, 261.63, 329.63, 0, 
+        392.00, 0, 0, 0, 196.00, 0, 0, 0,
+        // Bar 3-4: Variation
+        261.63, 0, 0, 196.00, 0, 164.81, 0, 0,
+        220.00, 0, 246.94, 0, 261.63, 0, 220.00, 196.00,
+        // Bar 5-6: Build up
+        392.00, 369.99, 349.23, 329.63, 0, 311.13, 329.63, 0,
+        349.23, 0, 392.00, 440.00, 523.25, 0, 440.00, 0,
+        // Bar 7-8: Resolution
+        587.33, 0, 523.25, 0, 493.88, 0, 440.00, 0,
+        392.00, 0, 329.63, 349.23, 329.63, 0, 261.63, 0
       ];
       
-      // Bass line
-      const bassNotes = [130.81, 146.83, 164.81, 146.83]; // C-D-E-D
+      // Bass line pattern
+      const bassNotes = [
+        98.00, 98.00, 98.00, 98.00, 123.47, 123.47, 123.47, 123.47,
+        130.81, 130.81, 130.81, 130.81, 98.00, 98.00, 98.00, 98.00
+      ];
       
-      // Arpeggio pattern (like slot machine sounds)
-      const arpeggio = [1046.50, 1318.51, 1567.98, 1318.51]; // High C-E-G-E
+      // Lead arpeggio pattern
+      const arpeggio = [
+        1046.50, 1318.51, 1567.98, 1318.51,
+        1174.66, 1396.91, 1760.00, 1396.91
+      ];
       
       let melodyIndex = 0;
       let bassIndex = 0;
       let arpIndex = 0;
+      let tickCount = 0;
       
       // Store oscillators globally for cleanup
       backgroundOscillator = mainOsc;
@@ -1031,15 +1064,15 @@
       function playMelody() {
         if (!isMuted && audioContext && audioContext.state === 'running') {
           const freq = melody[melodyIndex];
-          mainOsc.frequency.setValueAtTime(freq, audioContext.currentTime);
-          mainGain.gain.setValueAtTime(0.05, audioContext.currentTime);
-          mainGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-          melodyIndex = (melodyIndex + 1) % melody.length;
-          
-          // Play coin sound effect occasionally
-          if (melodyIndex % 8 === 0) {
-            playCoinSound();
+          if (freq > 0) {
+            mainOsc.frequency.setValueAtTime(freq, audioContext.currentTime);
+            mainGain.gain.setValueAtTime(0.08, audioContext.currentTime);
+            mainGain.gain.setValueAtTime(0.08, audioContext.currentTime + 0.05);
+            mainGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+          } else {
+            mainGain.gain.setValueAtTime(0.001, audioContext.currentTime);
           }
+          melodyIndex = (melodyIndex + 1) % melody.length;
         }
       }
       
@@ -1048,107 +1081,132 @@
         if (!isMuted && audioContext && audioContext.state === 'running') {
           const freq = bassNotes[bassIndex];
           bassOsc.frequency.setValueAtTime(freq, audioContext.currentTime);
-          bassGain.gain.setValueAtTime(0.03, audioContext.currentTime);
-          bassGain.gain.exponentialRampToValueAtTime(0.005, audioContext.currentTime + 0.3);
+          bassGain.gain.setValueAtTime(0.1, audioContext.currentTime);
+          bassGain.gain.setValueAtTime(0.1, audioContext.currentTime + 0.1);
+          bassGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
           bassIndex = (bassIndex + 1) % bassNotes.length;
         }
       }
       
-      // Play arpeggio (slot machine-like)
+      // Play lead arpeggio
       function playArpeggio() {
         if (!isMuted && audioContext && audioContext.state === 'running') {
-          const freq = arpeggio[arpIndex];
-          arpeggioOsc.frequency.setValueAtTime(freq, audioContext.currentTime);
-          arpeggioGain.gain.setValueAtTime(0.02, audioContext.currentTime);
-          arpeggioGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
-          arpIndex = (arpIndex + 1) % arpeggio.length;
+          tickCount++;
+          if (tickCount % 2 === 0) { // Play every other tick
+            const freq = arpeggio[arpIndex];
+            leadOsc.frequency.setValueAtTime(freq, audioContext.currentTime);
+            leadGain.gain.setValueAtTime(0.03, audioContext.currentTime);
+            leadGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.03);
+            arpIndex = (arpIndex + 1) % arpeggio.length;
+          }
         }
       }
       
-      // Coin/cash register sound
-      function playCoinSound() {
-        if (isMuted) return;
-        
-        const coinOsc = audioContext.createOscillator();
-        const coinGain = audioContext.createGain();
-        
-        coinOsc.type = 'sine';
-        coinOsc.frequency.setValueAtTime(2093.00, audioContext.currentTime); // High C
-        coinOsc.frequency.exponentialRampToValueAtTime(4186.01, audioContext.currentTime + 0.1); // Higher C
-        
-        coinGain.gain.setValueAtTime(0.1, audioContext.currentTime);
-        coinGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
-        
-        coinOsc.connect(coinGain);
-        coinGain.connect(audioContext.destination);
-        
-        coinOsc.start(audioContext.currentTime);
-        coinOsc.stop(audioContext.currentTime + 0.2);
+      // Play noise drum
+      function playDrum() {
+        if (!isMuted && audioContext && audioContext.state === 'running') {
+          if (tickCount % 8 === 0 || tickCount % 8 === 4) { // Kick pattern
+            noiseOsc.frequency.setValueAtTime(60, audioContext.currentTime);
+            noiseGain.gain.setValueAtTime(0.15, audioContext.currentTime);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
+          } else if (tickCount % 8 === 2 || tickCount % 8 === 6) { // Snare pattern
+            noiseOsc.frequency.setValueAtTime(200, audioContext.currentTime);
+            noiseGain.gain.setValueAtTime(0.05, audioContext.currentTime);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.02);
+          }
+        }
       }
       
-      // Set up intervals for playback
-      setInterval(playMelody, 125); // Fast tempo for arcade feel
-      setInterval(playBass, 500);
-      setInterval(playArpeggio, 62.5); // Very fast for slot machine effect
+      // Set up intervals for playback (120 BPM, 16th notes)
+      setInterval(() => {
+        playMelody();
+        playDrum();
+      }, 125); // 16th notes at 120 BPM
+      setInterval(playBass, 250); // 8th notes
+      setInterval(playArpeggio, 62.5); // 32nd notes
       
-      // Connect audio nodes
-      mainOsc.connect(filter);
+      // Connect audio nodes with bit crusher effect
+      mainOsc.connect(bitcrusher);
+      bitcrusher.connect(filter);
       filter.connect(mainGain);
       mainGain.connect(audioContext.destination);
       
       bassOsc.connect(bassGain);
       bassGain.connect(audioContext.destination);
       
-      arpeggioOsc.connect(arpeggioGain);
-      arpeggioGain.connect(audioContext.destination);
+      leadOsc.connect(leadGain);
+      leadGain.connect(audioContext.destination);
+      
+      noiseOsc.connect(noiseGain);
+      noiseGain.connect(audioContext.destination);
       
       // Start oscillators
       mainOsc.start();
       bassOsc.start();
-      arpeggioOsc.start();
+      leadOsc.start();
+      noiseOsc.start();
       
       // Set initial volumes
-      mainGain.gain.value = 0.02;
-      bassGain.gain.value = 0.02;
-      arpeggioGain.gain.value = 0.01;
+      mainGain.gain.value = 0.001;
+      bassGain.gain.value = 0.001;
+      leadGain.gain.value = 0.001;
+      noiseGain.gain.value = 0.001;
     }
 
-    // Typing sound effect
+    // Typing sound effect - realistic keyboard press
     function playTypingSound() {
       if (!audioContext || isMuted || audioContext.state !== 'running') return;
       
-      const duration = 0.03;
-      const osc = audioContext.createOscillator();
+      // Create white noise for key press
+      const bufferSize = audioContext.sampleRate * 0.008; // 8ms
+      const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+      const output = buffer.getChannelData(0);
+      
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+      
+      const whiteNoise = audioContext.createBufferSource();
+      whiteNoise.buffer = buffer;
+      
+      // Filter for more realistic keyboard sound
+      const filter = audioContext.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.value = 2000;
+      
+      const filter2 = audioContext.createBiquadFilter();
+      filter2.type = 'lowpass';
+      filter2.frequency.value = 5000;
+      
       const gain = audioContext.createGain();
+      gain.gain.setValueAtTime(0.015, audioContext.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.008);
       
-      // Mechanical keyboard sound
-      osc.type = 'square';
-      osc.frequency.value = 1000 + Math.random() * 500;
-      
-      gain.gain.setValueAtTime(0.02, audioContext.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
-      
-      osc.connect(gain);
-      gain.connect(audioContext.destination);
-      
-      osc.start(audioContext.currentTime);
-      osc.stop(audioContext.currentTime + duration);
-      
-      // Add click sound
+      // Add click/thock sound
       const clickOsc = audioContext.createOscillator();
       const clickGain = audioContext.createGain();
       
       clickOsc.type = 'sine';
-      clickOsc.frequency.value = 40;
+      clickOsc.frequency.value = 800 + Math.random() * 200; // Vary frequency slightly
       
-      clickGain.gain.setValueAtTime(0.05, audioContext.currentTime);
-      clickGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.01);
+      clickGain.gain.setValueAtTime(0.02, audioContext.currentTime);
+      clickGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.003);
+      
+      // Connect the nodes
+      whiteNoise.connect(filter);
+      filter.connect(filter2);
+      filter2.connect(gain);
+      gain.connect(audioContext.destination);
       
       clickOsc.connect(clickGain);
       clickGain.connect(audioContext.destination);
       
+      // Start sounds
+      whiteNoise.start(audioContext.currentTime);
+      whiteNoise.stop(audioContext.currentTime + 0.008);
+      
       clickOsc.start(audioContext.currentTime);
-      clickOsc.stop(audioContext.currentTime + 0.01);
+      clickOsc.stop(audioContext.currentTime + 0.003);
     }
 
     // Typing Effect with Sound and Delete functionality
