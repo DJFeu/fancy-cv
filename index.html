@@ -466,10 +466,8 @@
       background: #00ff00;
       margin-left: 3px;
       animation: blink 1s infinite;
-      vertical-align: baseline;
+      vertical-align: text-bottom;
       box-shadow: 0 0 10px #00ff00;
-      position: relative;
-      top: -2px;
     }
 
     @keyframes blink {
@@ -1236,10 +1234,14 @@
       
       const cursor = document.createElement('span');
       cursor.className = 'cursor';
-      element.parentNode.insertBefore(cursor, element.nextSibling);
       
       function type() {
         if (i < text.length) {
+          // Remove cursor from its current position
+          if (cursor.parentNode) {
+            cursor.remove();
+          }
+          
           // Check if we're at a URL or email
           if (text.substring(i).startsWith('https://') || text.substring(i).startsWith('mailto:')) {
             // Find the end of the URL/email
@@ -1277,6 +1279,9 @@
             playTypingSound();
             i++;
           }
+          
+          // Add cursor at the end of the current text
+          element.appendChild(cursor);
           
           // Add some randomness to typing speed for realism
           const nextDelay = speed + (Math.random() - 0.5) * speed * 0.5;
