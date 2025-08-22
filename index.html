@@ -40,7 +40,8 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: flex-start;
+      padding-top: 60px;
     }
 
     /* Terminal Window */
@@ -489,6 +490,20 @@
       h2.typed { font-size: 16px; }
       p.typed { font-size: 14px; }
       .terminal-body { padding: 20px; }
+      
+      #terminal {
+        padding-top: 30px;
+        justify-content: flex-start;
+      }
+      
+      /* Disable complex animations on mobile */
+      @keyframes pulseGreen {
+        0%, 100% { transform: none; }
+      }
+      
+      @keyframes pulseRed {
+        0%, 100% { transform: none; }
+      }
     }
   </style>
 </head>
@@ -509,7 +524,7 @@
     </div>
   </div>
 
-  <!-- 3D Matrix Background -->
+  <!-- Matrix Background -->
   <canvas id="matrix-canvas"></canvas>
 
   <!-- Terminal Container -->
@@ -561,22 +576,19 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   
   <script>
-    // 3D Matrix Rain Effect with Three.js - Optimized for mobile
-    let animationId;
-    let isPageVisible = true;
-    
-    // Check if mobile device
+    // Check if mobile device to optimize performance
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
+    // 3D Matrix Rain Effect with Three.js
     const canvas = document.getElementById('matrix-canvas');
     const renderer = new THREE.WebGLRenderer({ 
       canvas: canvas,
-      antialias: !isMobile, // Disable antialiasing on mobile
+      antialias: !isMobile, // Disable antialiasing on mobile for better performance
       alpha: false,
-      powerPreference: "low-power" // Use low power mode for mobile
+      powerPreference: "low-power" // Use low power mode for mobile devices
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1 : 2)); // Limit pixel ratio on mobile
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
@@ -594,27 +606,15 @@
     const matrixChars = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+-=[]{}|;:,.<>?";
     const charArray = matrixChars.split('');
 
-    // Reduce complexity for mobile
-    const columns = isMobile ? 40 : 80;
-    const rows = isMobile ? 20 : 30;
-    const spacing = 1.5;
-    
-    // Create texture cache
-    const textureCache = new Map();
-    
-    // Create texture for characters with caching
+    // Create texture for characters
     function createTextTexture(char) {
-      if (textureCache.has(char)) {
-        return textureCache.get(char);
-      }
-      
-      const size = isMobile ? 128 : 256; // Smaller texture for mobile
+      const size = 256;
       const canvas = document.createElement('canvas');
       canvas.width = size;
       canvas.height = size;
       
       const context = canvas.getContext('2d');
-      context.font = `bold ${size * 0.8}px monospace`;
+      context.font = 'bold 200px monospace';
       context.fillStyle = '#00ff00';
       context.textAlign = 'center';
       context.textBaseline = 'middle';
@@ -622,10 +622,14 @@
       
       const texture = new THREE.CanvasTexture(canvas);
       texture.needsUpdate = true;
-      textureCache.set(char, texture);
       return texture;
     }
 
+    // Matrix columns - reduce for mobile performance to prevent reload loops
+    const columns = isMobile ? 30 : 80;
+    const rows = isMobile ? 15 : 30;
+    const spacing = 1.5;
+    
     // Create matrix rain particles
     const matrixGroup = new THREE.Group();
     const matrixColumns = [];
@@ -677,119 +681,84 @@
     let time = 0;
     const clock = new THREE.Clock();
 
-    // Matrix animation - optimized
+    // Matrix animation with mobile optimization
+    let frameCount = 0;
     function animateMatrix() {
-      if (!isPageVisible) return;
+      requestAnimationFrame(animateMatrix);
       
-      animationId = requestAnimationFrame(animateMatrix);
+      // Skip frames on mobile to improve performance and prevent reload loops
+      if (isMobile) {
+        frameCount++;
+        if (frameCount % 2 !== 0) return; // Only render every other frame on mobile
+      }
       
       const deltaTime = clock.getDelta();
       time += deltaTime;
 
-      // Reduce update frequency on mobile
-      const updateFrequency = isMobile ? 2 : 1;
-      
-      if (Math.floor(time * 60) % updateFrequency === 0) {
-        // Animate each column
-        matrixColumns.forEach((column, colIndex) => {
-          column.forEach((mesh, rowIndex) => {
-            const userData = mesh.userData;
+      // Animate each column
+      matrixColumns.forEach((column, colIndex) => {
+        column.forEach((mesh, rowIndex) => {
+          const userData = mesh.userData;
+          
+          // Create falling effect
+          if (time > userData.delay * 0.1) {
+            mesh.position.y -= userData.speed;
             
-            // Create falling effect
-            if (time > userData.delay * 0.1) {
-              mesh.position.y -= userData.speed;
-              
-              // Reset position when reaching bottom
-              if (mesh.position.y < -rows/2 * spacing) {
-                mesh.position.y = rows/2 * spacing;
-                // Change character less frequently on mobile
-                if (!isMobile || Math.random() > 0.5) {
-                  const newChar = charArray[Math.floor(Math.random() * charArray.length)];
-                  mesh.material.map = createTextTexture(newChar);
-                  userData.char = newChar;
-                }
-                userData.speed = 0.1 + Math.random() * 0.3;
-              }
-              
-              // Calculate opacity based on position (trail effect)
-              const normalizedY = (mesh.position.y + rows/2 * spacing) / (rows * spacing);
-              
-              // Head of the trail is bright
-              if (rowIndex === 0 || (rowIndex < 3 && Math.random() > 0.5)) {
-                mesh.material.opacity = 1;
-                mesh.material.color = new THREE.Color(0xffffff);
-              } else {
-                // Gradient fade
-                mesh.material.opacity = normalizedY * 0.8;
-                mesh.material.color = new THREE.Color(0x00ff00);
-              }
-              
-              // Add flicker effect (less on mobile)
-              if (!isMobile && Math.random() > 0.98) {
-                mesh.material.opacity = Math.random();
-              }
+            // Reset position when reaching bottom
+            if (mesh.position.y < -rows/2 * spacing) {
+              mesh.position.y = rows/2 * spacing;
+              // Change character
+              const newChar = charArray[Math.floor(Math.random() * charArray.length)];
+              mesh.material.map = createTextTexture(newChar);
+              userData.char = newChar;
+              userData.speed = 0.1 + Math.random() * 0.3;
             }
             
-            // Z-axis wave motion (reduced on mobile)
-            if (!isMobile) {
-              mesh.position.z = Math.sin(time * 2 + colIndex * 0.1) * 2;
-              mesh.rotation.z = Math.sin(time + colIndex * 0.1) * 0.05;
+            // Calculate opacity based on position (trail effect)
+            const normalizedY = (mesh.position.y + rows/2 * spacing) / (rows * spacing);
+            
+            // Head of the trail is bright
+            if (rowIndex === 0 || (rowIndex < 3 && Math.random() > 0.5)) {
+              mesh.material.opacity = 1;
+              mesh.material.color = new THREE.Color(0xffffff);
+            } else {
+              // Gradient fade
+              mesh.material.opacity = normalizedY * 0.8;
+              mesh.material.color = new THREE.Color(0x00ff00);
             }
-          });
+            
+            // Add flicker effect
+            if (Math.random() > 0.98) {
+              mesh.material.opacity = Math.random();
+            }
+          }
+          
+          // Z-axis wave motion
+          mesh.position.z = Math.sin(time * 2 + colIndex * 0.1) * 2;
+          
+          // Slight rotation
+          mesh.rotation.z = Math.sin(time + colIndex * 0.1) * 0.05;
         });
+      });
 
-        // Camera movement (reduced on mobile)
-        if (!isMobile) {
-          camera.position.x = Math.sin(time * 0.5) * 5;
-          camera.position.y = Math.cos(time * 0.3) * 3;
-          camera.lookAt(0, 0, 0);
-          matrixGroup.rotation.y = Math.sin(time * 0.2) * 0.1;
-        }
-      }
+      // Camera movement
+      camera.position.x = Math.sin(time * 0.5) * 5;
+      camera.position.y = Math.cos(time * 0.3) * 3;
+      camera.lookAt(0, 0, 0);
+
+      // Rotate entire matrix group slightly
+      matrixGroup.rotation.y = Math.sin(time * 0.2) * 0.1;
       
       renderer.render(scene, camera);
     }
 
-    // Start animation
     animateMatrix();
 
-    // Handle page visibility change
-    document.addEventListener('visibilitychange', () => {
-      isPageVisible = !document.hidden;
-      
-      if (isPageVisible) {
-        clock.start();
-        animateMatrix();
-      } else {
-        if (animationId) {
-          cancelAnimationFrame(animationId);
-        }
-      }
-    });
-
-    // Handle window focus/blur
-    window.addEventListener('blur', () => {
-      isPageVisible = false;
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-      }
-    });
-
-    window.addEventListener('focus', () => {
-      isPageVisible = true;
-      clock.start();
-      animateMatrix();
-    });
-
-    // Handle resize with debouncing
-    let resizeTimeout;
+    // Handle resize
     window.addEventListener('resize', () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      }, 250);
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
     // Audio System
@@ -1179,6 +1148,36 @@
       }
     }
 
+    // Auto-scroll function for better user experience
+    let autoScrollInterval;
+    let autoContactTimeout; // Timer for auto-showing contact info after 10 seconds
+    
+    function startAutoScroll() {
+      // Only auto-scroll on desktop, not mobile (due to browser limitations)
+      if (!isMobile) {
+        let scrollTarget = 0;
+        autoScrollInterval = setInterval(() => {
+          const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+          if (scrollTarget < maxScroll) {
+            scrollTarget += 2;
+            window.scrollTo(0, scrollTarget);
+          } else {
+            clearInterval(autoScrollInterval);
+          }
+        }, 30);
+      }
+    }
+    
+    function stopAutoScroll() {
+      if (autoScrollInterval) {
+        clearInterval(autoScrollInterval);
+      }
+    }
+    
+    // Stop auto-scroll on user interaction
+    window.addEventListener('wheel', stopAutoScroll);
+    window.addEventListener('touchstart', stopAutoScroll);
+    
     // Start typing sequence
     function startTypingSequence() {
       let index = 0;
@@ -1200,6 +1199,18 @@
               if (contactIndex > -1) {
                 index = contactIndex + 1; // Skip contact
               }
+              
+              // Auto show contact info after 10 seconds if user doesn't click buy/sell buttons
+              autoContactTimeout = setTimeout(() => {
+                stopChart();
+                document.getElementById('tradingSection').style.display = 'none';
+                const contactEl = document.getElementById('contact');
+                contactEl.style.display = 'block';
+                
+                // Type contact info automatically
+                const contactText = texts.find(t => t.id === 'contact');
+                typeWriter(contactEl, contactText.text, contactText.speed, () => {});
+              }, 10000);
               
               setTimeout(typeNext, 1000);
             }, 500);
@@ -1232,6 +1243,11 @@
     document.addEventListener('DOMContentLoaded', () => {
       // Buy button
       document.getElementById('buyBtn').addEventListener('click', () => {
+        // Clear auto-contact timeout since user clicked the button
+        if (autoContactTimeout) {
+          clearTimeout(autoContactTimeout);
+        }
+        
         stopChart();
         document.getElementById('tradingSection').style.display = 'none';
         const contactEl = document.getElementById('contact');
@@ -1259,6 +1275,11 @@
       
       // Sell button
       document.getElementById('sellBtn').addEventListener('click', () => {
+        // Clear auto-contact timeout since user clicked the button
+        if (autoContactTimeout) {
+          clearTimeout(autoContactTimeout);
+        }
+        
         stopChart();
         document.getElementById('tradingSection').style.display = 'none';
         const contactEl = document.getElementById('contact');
@@ -1329,8 +1350,9 @@
         document.getElementById('startOverlay').style.display = 'none';
       }, 500);
       
-      // Start typing
+      // Start typing animation and auto-scroll feature
       startTypingSequence();
+      setTimeout(startAutoScroll, 2000); // Start auto-scroll after 2 seconds (desktop only)
     });
 
     // Also allow clicking anywhere to start audio if not started
