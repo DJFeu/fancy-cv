@@ -1155,8 +1155,8 @@
         
         widget.bind(SC.Widget.Events.READY, function() {
           console.log('SoundCloud widget ready');
-          // Set appropriate volume for each platform
-          const volume = isMobile ? 25 : 30;
+          // Unified volume for all platforms, slightly increased
+          const volume = 35; // Same for both mobile and desktop
           widget.setVolume(volume);
           
           // Mark widget as ready
@@ -1255,8 +1255,8 @@
       filter2.frequency.value = 5000;
       
       const gain = audioContext.createGain();
-      // Slightly reduced volume for mobile, normal for desktop
-      const baseVolume = isMobile ? 0.012 : 0.015;
+      // Unified and slightly increased volume for both platforms
+      const baseVolume = 0.018; // Same for both mobile and desktop
       gain.gain.setValueAtTime(baseVolume, audioContext.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.008);
       
@@ -1267,8 +1267,8 @@
       clickOsc.type = 'sine';
       clickOsc.frequency.value = 800 + Math.random() * 200; // Vary frequency slightly
       
-      // Slightly reduced click sound for mobile
-      const clickVolume = isMobile ? 0.015 : 0.02;
+      // Unified click sound volume
+      const clickVolume = 0.025; // Same for both platforms, slightly increased
       clickGain.gain.setValueAtTime(clickVolume, audioContext.currentTime);
       clickGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.003);
       
@@ -1708,8 +1708,8 @@
           coinOsc.type = 'sine';
           coinOsc.frequency.setValueAtTime(2093, audioContext.currentTime);
           coinOsc.frequency.exponentialRampToValueAtTime(4186, audioContext.currentTime + 0.1);
-          // Normal coin sound volume
-          coinGain.gain.setValueAtTime(isMobile ? 0.08 : 0.1, audioContext.currentTime);
+          // Unified coin sound volume, slightly increased
+          coinGain.gain.setValueAtTime(0.12, audioContext.currentTime); // Same for both platforms
           coinGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
           coinOsc.connect(coinGain);
           coinGain.connect(audioContext.destination);
@@ -1741,8 +1741,8 @@
           errorOsc.type = 'sawtooth';
           errorOsc.frequency.setValueAtTime(200, audioContext.currentTime);
           errorOsc.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.2);
-          // Normal error sound volume
-          errorGain.gain.setValueAtTime(isMobile ? 0.08 : 0.1, audioContext.currentTime);
+          // Unified error sound volume, slightly increased
+          errorGain.gain.setValueAtTime(0.12, audioContext.currentTime); // Same for both platforms
           errorGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
           errorOsc.connect(errorGain);
           errorGain.connect(audioContext.destination);
