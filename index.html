@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -15,544 +16,714 @@
       box-sizing: border-box;
     }
 
-    html, body {
-      width: 100%;
-      height: 100%;
-      font-family: 'Fira Code', 'Space Mono', 'Courier New', monospace;
-      background: #000;
-      overflow-x: hidden;
-      position: relative;
-      font-weight: 400;
-      letter-spacing: -0.5px;
-    }
+```
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: 'Fira Code', 'Space Mono', 'Courier New', monospace;
+  background: #000;
+  overflow-x: hidden;
+  position: relative;
+  font-weight: 400;
+  letter-spacing: -0.5px;
+}
 
-    /* 3D Matrix Background */
-    #matrix-canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-    }
+/* 3D Matrix Background */
+#matrix-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
 
-    /* Terminal Container - Wider for better content display */
-    #terminal {
-      position: relative;
-      z-index: 10;
-      max-width: 1100px; /* Increased from 900px */
-      margin: 0 auto;
-      padding: 40px 20px;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      padding-top: 60px;
-    }
+/* Terminal Container - Wider for better content display */
+#terminal {
+  position: relative;
+  z-index: 10;
+  max-width: 1100px; /* Increased from 900px */
+  margin: 0 auto;
+  padding: 40px 20px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-top: 60px;
+}
 
-    /* Terminal Window */
-    .terminal-window {
-      background: rgba(0, 0, 0, 0.85);
-      border: 2px solid #00ff00;
-      border-radius: 10px;
-      box-shadow: 0 0 40px rgba(0, 255, 0, 0.5), inset 0 0 20px rgba(0, 255, 0, 0.1);
-      overflow: hidden;
-      backdrop-filter: blur(10px);
-    }
+/* Terminal Window */
+.terminal-window {
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid #00ff00;
+  border-radius: 10px;
+  box-shadow: 0 0 40px rgba(0, 255, 0, 0.5), inset 0 0 20px rgba(0, 255, 0, 0.1);
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
 
-    /* Terminal Header */
-    .terminal-header {
-      background: linear-gradient(90deg, #1a1a1a, #2a2a2a);
-      padding: 10px 15px;
-      display: flex;
-      align-items: center;
-      border-bottom: 1px solid #00ff00;
-    }
+/* Terminal Header */
+.terminal-header {
+  background: linear-gradient(90deg, #1a1a1a, #2a2a2a);
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #00ff00;
+}
 
-    .terminal-buttons {
-      display: flex;
-      gap: 8px;
-    }
+.terminal-buttons {
+  display: flex;
+  gap: 8px;
+}
 
-    .terminal-button {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      cursor: pointer;
-    }
+.terminal-button {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  cursor: pointer;
+}
 
-    .close { background: #ff5f56; }
-    .minimize { background: #ffbd2e; }
-    .maximize { background: #27c93f; }
+.close { background: #ff5f56; }
+.minimize { background: #ffbd2e; }
+.maximize { background: #27c93f; }
 
-    .terminal-title {
-      flex: 1;
-      text-align: center;
-      font-size: 14px;
-      color: #00ff00;
-      text-shadow: 0 0 5px #00ff00;
-      font-family: 'Share Tech Mono', monospace;
-      letter-spacing: 1px;
-    }
+.terminal-title {
+  flex: 1;
+  text-align: center;
+  font-size: 14px;
+  color: #00ff00;
+  text-shadow: 0 0 5px #00ff00;
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 1px;
+}
 
-    /* Terminal Body */
-    .terminal-body {
-      padding: 30px;
-      min-height: 400px;
-    }
+/* Terminal Body */
+.terminal-body {
+  padding: 30px;
+  min-height: 400px;
+}
 
-    /* Typing Text Styles */
-    .prompt {
-      color: #00ff00;
-      margin-right: 8px;
-      text-shadow: 0 0 3px #00ff00;
-    }
+/* Typing Text Styles */
+.prompt {
+  color: #00ff00;
+  margin-right: 8px;
+  text-shadow: 0 0 3px #00ff00;
+}
 
-    .typing-container {
-      margin-bottom: 25px;
-      font-size: 18px; /* Increased for command visibility */
-      line-height: 1.8;
-      font-family: 'Fira Code', monospace;
-    }
+.typing-container {
+  margin-bottom: 25px;
+  font-size: 18px; /* Increased for command visibility */
+  line-height: 1.8;
+  font-family: 'Fira Code', monospace;
+}
 
-    h1.typed {
-      font-size: 56px; /* Increased from 48px for better hierarchy */
-      color: #00ffff;
-      text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
-      margin-bottom: 20px;
-      font-weight: 700;
-      letter-spacing: 4px;
-      font-family: 'Share Tech Mono', 'Fira Code', monospace;
-      text-transform: uppercase;
-      line-height: 1.2;
-    }
+h1.typed {
+  font-size: 56px; /* Increased from 48px for better hierarchy */
+  color: #00ffff;
+  text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
+  margin-bottom: 20px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  font-family: 'Share Tech Mono', 'Fira Code', monospace;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
 
-    h2.typed {
-      font-size: 24px; /* Increased from 20px for better readability */
-      color: #ffff00;
-      text-shadow: 0 0 10px #ffff00, 0 0 20px #ffff00;
-      margin-bottom: 30px;
-      letter-spacing: 2px;
-      font-family: 'VT323', 'Fira Code', monospace;
-      font-weight: 400;
-      line-height: 1.4;
-    }
+h2.typed {
+  font-size: 24px; /* Increased from 20px for better readability */
+  color: #ffff00;
+  text-shadow: 0 0 10px #ffff00, 0 0 20px #ffff00;
+  margin-bottom: 30px;
+  letter-spacing: 2px;
+  font-family: 'VT323', 'Fira Code', monospace;
+  font-weight: 400;
+  line-height: 1.4;
+}
 
-    p.typed {
-      font-size: 16px; /* Increased from 14px for better readability */
-      color: #00ff00;
-      line-height: 1.9;
-      max-width: 100%;
-      text-shadow: 0 0 3px #00ff00;
-      font-family: 'Fira Code', 'Space Mono', monospace;
-      font-weight: 400; /* Increased from 300 for better readability */
-      letter-spacing: 0.5px;
-    }
+p.typed {
+  font-size: 16px; /* Increased from 14px for better readability */
+  color: #00ff00;
+  line-height: 1.9;
+  max-width: 100%;
+  text-shadow: 0 0 3px #00ff00;
+  font-family: 'Fira Code', 'Space Mono', monospace;
+  font-weight: 400; /* Increased from 300 for better readability */
+  letter-spacing: 0.5px;
+}
 
-    /* Skills and Experience sections */
-    pre.typed {
-      font-family: 'Fira Code', 'Space Mono', monospace;
-      font-size: 15px; /* Increased from 13px */
-      color: #00ff00;
-      line-height: 1.8; /* Increased line height for better readability */
-      text-shadow: 0 0 3px #00ff00;
-      white-space: pre-wrap;
-      margin: 25px 0;
-      font-weight: 400;
-      letter-spacing: 0.3px;
-    }
+/* Skills and Experience sections */
+pre.typed {
+  font-family: 'Fira Code', 'Space Mono', monospace;
+  font-size: 15px; /* Increased from 13px */
+  color: #00ff00;
+  line-height: 1.8; /* Increased line height for better readability */
+  text-shadow: 0 0 3px #00ff00;
+  white-space: pre-wrap;
+  margin: 25px 0;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+}
 
-    .skills-section, .experience-section, .current-section {
-      border-left: 3px solid #00ff00;
-      padding-left: 25px; /* Increased padding */
-      margin: 30px 0; /* Increased margin */
-    }
+.skills-section, .experience-section, .current-section {
+  border-left: 3px solid #00ff00;
+  padding-left: 25px; /* Increased padding */
+  margin: 30px 0; /* Increased margin */
+}
 
-    .contact-section {
-      border: 1px solid #00ff00;
-      padding: 20px; /* Increased padding */
-      border-radius: 5px;
-      background: rgba(0, 255, 0, 0.05);
-      margin: 30px 0;
-      font-size: 15px; /* Set explicit font size */
-    }
+.contact-section {
+  border: 1px solid #00ff00;
+  padding: 20px; /* Increased padding */
+  border-radius: 5px;
+  background: rgba(0, 255, 0, 0.05);
+  margin: 30px 0;
+  font-size: 15px; /* Set explicit font size */
+}
 
-    .contact-section a {
-      color: #00ffff;
-      text-decoration: none;
-      transition: all 0.3s;
-    }
+.contact-section a {
+  color: #00ffff;
+  text-decoration: none;
+  transition: all 0.3s;
+  word-break: break-word; /* 確保長 URL 能夠換行 */
+  display: inline-block;
+}
 
-    .contact-section a:hover {
-      color: #ffffff;
-      text-shadow: 0 0 10px #00ffff;
-    }
+.contact-section a:hover {
+  color: #ffffff;
+  text-shadow: 0 0 10px #00ffff;
+}
 
-    /* Trading Section */
-    .trading-section {
-      margin: 25px 0;
-      padding: 20px;
-      border: 2px solid #00ff00;
-      border-radius: 10px;
-      background: rgba(0, 0, 0, 0.8);
-    }
+/* Trading Section */
+.trading-section {
+  margin: 25px 0;
+  padding: 20px;
+  border: 2px solid #00ff00;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.8);
+}
 
-    #depthChart {
-      width: 100%;
-      height: 300px;
-      border: 1px solid #00ff00;
-      border-radius: 5px;
-      background: rgba(0, 0, 0, 0.9);
-      margin-bottom: 20px;
-    }
+#depthChart {
+  width: 100%;
+  height: 300px;
+  border: 1px solid #00ff00;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.9);
+  margin-bottom: 20px;
+}
 
-    .trading-buttons {
-      display: flex;
-      gap: 20px;
-      justify-content: center;
-    }
+.trading-buttons {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
 
-    .btn-buy, .btn-sell {
-      flex: 1;
-      padding: 15px 30px;
-      font-size: 18px;
-      font-weight: 600;
-      font-family: 'Share Tech Mono', 'Fira Code', monospace;
-      border: 2px solid;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: all 0.3s;
-      text-transform: uppercase;
-      letter-spacing: 3px;
-      position: relative;
-      overflow: hidden;
-    }
+.btn-buy, .btn-sell {
+  flex: 1;
+  padding: 15px 30px;
+  font-size: 18px;
+  font-weight: 600;
+  font-family: 'Share Tech Mono', 'Fira Code', monospace;
+  border: 2px solid;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  position: relative;
+  overflow: hidden;
+}
 
-    .btn-buy {
-      background: rgba(0, 255, 0, 0.1);
-      border-color: #00ff00;
-      color: #00ff00;
-      animation: pulseGreen 1.5s infinite;
-    }
+.btn-buy {
+  background: rgba(0, 255, 0, 0.1);
+  border-color: #00ff00;
+  color: #00ff00;
+  animation: pulseGreen 1.5s infinite;
+}
 
-    @keyframes pulseGreen {
-      0%, 100% {
-        box-shadow: 0 0 20px #00ff00, inset 0 0 10px rgba(0, 255, 0, 0.2);
-        transform: scale(1);
-      }
-      50% {
-        box-shadow: 0 0 40px #00ff00, inset 0 0 20px rgba(0, 255, 0, 0.3);
-        transform: scale(1.05);
-      }
-    }
+@keyframes pulseGreen {
+  0%, 100% {
+    box-shadow: 0 0 20px #00ff00, inset 0 0 10px rgba(0, 255, 0, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 40px #00ff00, inset 0 0 20px rgba(0, 255, 0, 0.3);
+    transform: scale(1.05);
+  }
+}
 
-    .btn-buy::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-      transform: translateY(-50%);
-      animation: shine 2s infinite;
-    }
+.btn-buy::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transform: translateY(-50%);
+  animation: shine 2s infinite;
+}
 
-    @keyframes shine {
-      0% { left: -100%; }
-      50%, 100% { left: 100%; }
-    }
+@keyframes shine {
+  0% { left: -100%; }
+  50%, 100% { left: 100%; }
+}
 
-    .btn-buy:hover {
-      background: #00ff00;
-      color: #000;
-      box-shadow: 0 0 50px #00ff00, inset 0 0 20px rgba(0, 0, 0, 0.3);
-      transform: scale(1.1);
-      animation: none;
-    }
+.btn-buy:hover {
+  background: #00ff00;
+  color: #000;
+  box-shadow: 0 0 50px #00ff00, inset 0 0 20px rgba(0, 0, 0, 0.3);
+  transform: scale(1.1);
+  animation: none;
+}
 
-    .btn-sell {
-      background: rgba(255, 0, 0, 0.1);
-      border-color: #ff0000;
-      color: #ff0000;
-      animation: pulseRed 1.5s infinite;
-      animation-delay: 0.75s;
-    }
+.btn-sell {
+  background: rgba(255, 0, 0, 0.1);
+  border-color: #ff0000;
+  color: #ff0000;
+  animation: pulseRed 1.5s infinite;
+  animation-delay: 0.75s;
+}
 
-    @keyframes pulseRed {
-      0%, 100% {
-        box-shadow: 0 0 20px #ff0000, inset 0 0 10px rgba(255, 0, 0, 0.2);
-        transform: scale(1);
-      }
-      50% {
-        box-shadow: 0 0 40px #ff0000, inset 0 0 20px rgba(255, 0, 0, 0.3);
-        transform: scale(1.05);
-      }
-    }
+@keyframes pulseRed {
+  0%, 100% {
+    box-shadow: 0 0 20px #ff0000, inset 0 0 10px rgba(255, 0, 0, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 40px #ff0000, inset 0 0 20px rgba(255, 0, 0, 0.3);
+    transform: scale(1.05);
+  }
+}
 
-    .btn-sell::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-      transform: translateY(-50%);
-      animation: shine 2s infinite;
-      animation-delay: 1s;
-    }
+.btn-sell::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transform: translateY(-50%);
+  animation: shine 2s infinite;
+  animation-delay: 1s;
+}
 
-    .btn-sell:hover {
-      background: #ff0000;
-      color: #fff;
-      box-shadow: 0 0 50px #ff0000, inset 0 0 20px rgba(0, 0, 0, 0.3);
-      transform: scale(1.1);
-      animation: none;
-    }
+.btn-sell:hover {
+  background: #ff0000;
+  color: #fff;
+  box-shadow: 0 0 50px #ff0000, inset 0 0 20px rgba(0, 0, 0, 0.3);
+  transform: scale(1.1);
+  animation: none;
+}
 
-    .btn-buy:active, .btn-sell:active {
-      transform: scale(0.95);
-    }
+.btn-buy:active, .btn-sell:active {
+  transform: scale(0.95);
+}
 
-    /* Scroll indicator */
-    .scroll-indicator {
-      position: fixed;
-      bottom: 80px;
-      right: 20px;
-      z-index: 100;
-      display: none;
-    }
+/* Scroll indicator */
+.scroll-indicator {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  z-index: 100;
+  display: none;
+}
 
-    .scroll-indicator.active {
-      display: block;
-      animation: bounce 2s infinite;
-    }
+.scroll-indicator.active {
+  display: block;
+  animation: bounce 2s infinite;
+}
 
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-    }
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
 
-    .scroll-text {
-      color: #00ff00;
-      font-size: 12px;
-      text-shadow: 0 0 10px #00ff00;
-      writing-mode: vertical-rl;
-      text-orientation: mixed;
-    }
+.scroll-text {
+  color: #00ff00;
+  font-size: 12px;
+  text-shadow: 0 0 10px #00ff00;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
 
-    /* Kelly Formula */
-    .kelly-formula {
-      margin-top: 30px;
-      padding: 20px;
-      border: 2px solid #ff0000;
-      border-radius: 10px;
-      text-align: center;
-      background: rgba(255, 0, 0, 0.1);
-      display: none;
-    }
+/* Kelly Formula - 修正溢出問題 */
+.kelly-formula {
+  margin-top: 30px;
+  padding: 20px;
+  border: 2px solid #ff0000;
+  border-radius: 10px;
+  text-align: center;
+  background: rgba(255, 0, 0, 0.1);
+  display: none;
+  overflow-x: auto; /* 添加水平滾動 */
+  max-width: 100%; /* 限制最大寬度 */
+}
 
-    .formula-text {
-      font-size: 36px; /* Increased for emphasis */
-      color: #ff0000;
-      font-weight: bold;
-      font-family: 'Fira Code', 'VT323', monospace; /* Switched order for better formula display */
-      animation: redPulse 1.5s infinite;
-      display: block;
-      letter-spacing: 3px;
-      white-space: nowrap; /* Prevent line breaks */
-    }
+.formula-text {
+  font-size: 36px;
+  color: #ff0000;
+  font-weight: bold;
+  font-family: 'Fira Code', 'VT323', monospace;
+  animation: redPulse 1.5s infinite;
+  display: inline-block; /* 改為 inline-block */
+  letter-spacing: 3px;
+  white-space: nowrap;
+  padding: 0 10px; /* 添加內邊距 */
+}
 
-    @keyframes redPulse {
-      0%, 100% { 
-        text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
-        opacity: 1;
-      }
-      50% { 
-        text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000;
-        opacity: 0.7;
-      }
-    }
+@keyframes redPulse {
+  0%, 100% { 
+    text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
+    opacity: 1;
+  }
+  50% { 
+    text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000;
+    opacity: 0.7;
+  }
+}
 
-    /* Cursor Animation */
-    .cursor {
-      display: inline-block;
-      width: 10px;
-      height: 20px;
-      background: #00ff00;
-      margin-left: 3px;
-      animation: blink 1s infinite;
-      vertical-align: text-bottom;
+/* Cursor Animation */
+.cursor {
+  display: inline-block;
+  width: 10px;
+  height: 20px;
+  background: #00ff00;
+  margin-left: 3px;
+  animation: blink 1s infinite;
+  vertical-align: text-bottom;
+  box-shadow: 0 0 10px #00ff00;
+}
+
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+/* Music Control */
+.music-control {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid #00ff00;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.music-control:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 30px rgba(0, 255, 0, 0.8);
+}
+
+.music-btn {
+  background: none;
+  border: none;
+  color: #00ff00;
+  cursor: pointer;
+  font-size: 22px;
+  transition: all 0.3s;
+  text-shadow: 0 0 10px #00ff00;
+}
+
+/* Loading Screen */
+.loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  transition: opacity 0.5s;
+}
+
+.loading-text {
+  color: #00ff00;
+  font-size: 24px;
+  animation: pulse 1s infinite;
+  text-shadow: 0 0 20px #00ff00;
+  margin-bottom: 20px;
+}
+
+.loading-bar {
+  width: 300px;
+  height: 3px;
+  background: rgba(0, 255, 0, 0.2);
+  border: 1px solid #00ff00;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.loading-progress {
+  height: 100%;
+  background: #00ff00;
+  animation: load 1.5s ease-out;
+  box-shadow: 0 0 10px #00ff00;
+}
+
+@keyframes load {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Click to start overlay */
+.start-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: opacity 0.5s;
+}
+
+.start-text {
+  color: #00ff00;
+  font-size: 28px;
+  text-shadow: 0 0 20px #00ff00;
+  animation: pulse 1.5s infinite;
+  text-align: center;
+}
+
+.start-text small {
+  display: block;
+  font-size: 16px;
+  margin-top: 10px;
+  color: #00ffff;
+}
+
+/* 增強的響應式設計 */
+@media (max-width: 768px) {
+  /* 調整 Terminal 容器 */
+  #terminal {
+    padding: 20px 10px;
+    padding-top: 30px;
+  }
+  
+  /* 調整 Terminal 視窗 */
+  .terminal-window {
+    margin: 0 5px;
+    border-radius: 5px;
+  }
+  
+  .terminal-body {
+    padding: 15px;
+  }
+  
+  /* 標題文字大小調整 */
+  h1.typed { 
+    font-size: 32px;
+    letter-spacing: 1px;
+    word-wrap: break-word;
+    white-space: normal;
+  }
+  
+  h2.typed { 
+    font-size: 18px;
+    margin-bottom: 20px;
+    line-height: 1.3;
+  }
+  
+  p.typed { 
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  
+  pre.typed {
+    font-size: 13px;
+    line-height: 1.5;
+    padding-left: 15px;
+  }
+  
+  .typing-container {
+    font-size: 14px;
+  }
+  
+  /* 技能和經驗區塊 */
+  .skills-section, .experience-section, .current-section {
+    padding-left: 15px;
+    margin: 20px 0;
+  }
+  
+  /* 聯絡資訊區塊 */
+  .contact-section {
+    padding: 15px;
+    font-size: 13px;
+    word-break: break-word;
+  }
+  
+  /* Trading 區塊 */
+  .trading-section {
+    padding: 15px;
+    margin: 15px -5px; /* 負 margin 防止被截斷 */
+  }
+  
+  #depthChart {
+    height: 200px;
+  }
+  
+  .trading-buttons {
+    gap: 10px;
+    flex-direction: column; /* 在小螢幕上垂直排列 */
+  }
+  
+  .btn-buy, .btn-sell {
+    padding: 12px 20px;
+    font-size: 16px;
+    letter-spacing: 1px;
+  }
+  
+  /* Kelly 公式 - 關鍵修正 */
+  .kelly-formula {
+    margin: 20px -10px; /* 使用負 margin 確保不被截斷 */
+    padding: 15px 10px;
+    border-radius: 5px;
+  }
+  
+  .formula-text {
+    font-size: 20px; /* 大幅縮小字體 */
+    letter-spacing: 1px;
+    padding: 0 5px;
+  }
+  
+  /* 音樂控制按鈕 */
+  .music-control {
+    width: 40px;
+    height: 40px;
+    bottom: 15px;
+    right: 15px;
+  }
+  
+  .music-btn {
+    font-size: 18px;
+  }
+  
+  /* 載入畫面 */
+  .loading-text {
+    font-size: 20px;
+  }
+  
+  .loading-bar {
+    width: 80%;
+    max-width: 250px;
+  }
+  
+  /* 開始覆蓋層 */
+  .start-text {
+    font-size: 24px;
+    padding: 0 20px;
+  }
+  
+  .start-text small {
+    font-size: 14px;
+  }
+  
+  /* 停用複雜動畫以提升性能 */
+  @keyframes pulseGreen {
+    0%, 100% { 
+      transform: none;
       box-shadow: 0 0 10px #00ff00;
     }
-
-    @keyframes blink {
-      0%, 49% { opacity: 1; }
-      50%, 100% { opacity: 0; }
+  }
+  
+  @keyframes pulseRed {
+    0%, 100% { 
+      transform: none;
+      box-shadow: 0 0 10px #ff0000;
     }
+  }
+  
+  /* 調整按鈕 hover 效果 */
+  .btn-buy:hover, .btn-sell:hover {
+    transform: scale(1.02);
+  }
+}
 
-    /* Music Control */
-    .music-control {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 100;
-      background: rgba(0, 0, 0, 0.9);
-      border: 1px solid #00ff00;
-      border-radius: 50%;
-      width: 45px;
-      height: 45px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
-      cursor: pointer;
-      transition: all 0.3s;
-    }
+/* 超小型裝置 (iPhone SE, etc.) */
+@media (max-width: 375px) {
+  #terminal {
+    padding: 15px 5px;
+  }
+  
+  .terminal-body {
+    padding: 10px;
+  }
+  
+  h1.typed {
+    font-size: 28px;
+  }
+  
+  h2.typed {
+    font-size: 16px;
+  }
+  
+  p.typed, pre.typed {
+    font-size: 12px;
+  }
+  
+  .contact-section {
+    font-size: 12px;
+    padding: 12px;
+  }
+  
+  .kelly-formula {
+    margin: 15px -8px;
+    padding: 12px 8px;
+  }
+  
+  .formula-text {
+    font-size: 18px; /* 更小的字體 */
+    letter-spacing: 0.5px;
+  }
+  
+  .btn-buy, .btn-sell {
+    padding: 10px 15px;
+    font-size: 14px;
+  }
+}
 
-    .music-control:hover {
-      transform: scale(1.1);
-      box-shadow: 0 0 30px rgba(0, 255, 0, 0.8);
-    }
+/* 橫向模式優化 */
+@media (max-height: 500px) and (orientation: landscape) {
+  #terminal {
+    padding-top: 20px;
+  }
+  
+  h1.typed {
+    font-size: 36px;
+  }
+  
+  .terminal-body {
+    padding: 10px 20px;
+  }
+  
+  .formula-text {
+    font-size: 24px;
+  }
+}
+```
 
-    .music-btn {
-      background: none;
-      border: none;
-      color: #00ff00;
-      cursor: pointer;
-      font-size: 22px;
-      transition: all 0.3s;
-      text-shadow: 0 0 10px #00ff00;
-    }
-
-    /* Loading Screen */
-    .loading {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: #000;
-      z-index: 1000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      transition: opacity 0.5s;
-    }
-
-    .loading-text {
-      color: #00ff00;
-      font-size: 24px;
-      animation: pulse 1s infinite;
-      text-shadow: 0 0 20px #00ff00;
-      margin-bottom: 20px;
-    }
-
-    .loading-bar {
-      width: 300px;
-      height: 3px;
-      background: rgba(0, 255, 0, 0.2);
-      border: 1px solid #00ff00;
-      border-radius: 3px;
-      overflow: hidden;
-    }
-
-    .loading-progress {
-      height: 100%;
-      background: #00ff00;
-      animation: load 1.5s ease-out;
-      box-shadow: 0 0 10px #00ff00;
-    }
-
-    @keyframes load {
-      from { width: 0%; }
-      to { width: 100%; }
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    /* Click to start overlay */
-    .start-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      z-index: 999;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      transition: opacity 0.5s;
-    }
-
-    .start-text {
-      color: #00ff00;
-      font-size: 28px;
-      text-shadow: 0 0 20px #00ff00;
-      animation: pulse 1.5s infinite;
-      text-align: center;
-    }
-
-    .start-text small {
-      display: block;
-      font-size: 16px;
-      margin-top: 10px;
-      color: #00ffff;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      h1.typed { 
-        font-size: 36px; /* Increased from 32px */
-        letter-spacing: 2px;
-      }
-      h2.typed { 
-        font-size: 20px; /* Increased from 16px */
-        margin-bottom: 20px;
-      }
-      p.typed { 
-        font-size: 15px; /* Increased from 14px */
-        line-height: 1.7;
-      }
-      pre.typed {
-        font-size: 14px; /* Mobile font size for pre */
-        line-height: 1.6;
-      }
-      .terminal-body { 
-        padding: 15px; /* Slightly reduced for more content space */
-      }
-      .terminal-window {
-        margin: 0 10px; /* Add some margin on mobile */
-      }
-      .formula-text {
-        font-size: 24px; /* Smaller on mobile to fit single line */
-        letter-spacing: 1px;
-      }
-      .typing-container {
-        font-size: 16px;
-      }
-      
-      #terminal {
-        padding-top: 30px;
-        justify-content: flex-start;
-      }
-      
-      /* Disable complex animations on mobile */
-      @keyframes pulseGreen {
-        0%, 100% { transform: none; }
-      }
-      
-      @keyframes pulseRed {
-        0%, 100% { transform: none; }
-      }
-    }
   </style>
 </head>
 <body>
@@ -565,6 +736,7 @@
   </div>
 
   <!-- Click to Start Overlay -->
+
   <div class="start-overlay" id="startOverlay" style="display: none;">
     <div class="start-text">
       [ CLICK TO ENTER ]
@@ -573,9 +745,11 @@
   </div>
 
   <!-- Matrix Background -->
-  <canvas id="matrix-canvas"></canvas>
+
+<canvas id="matrix-canvas"></canvas>
 
   <!-- Terminal Container -->
+
   <div id="terminal">
     <div class="terminal-window">
       <div class="terminal-header">
@@ -596,34 +770,43 @@
         <pre class="typed skills-section" id="skills"></pre>
         <pre class="typed experience-section" id="experience"></pre>
         <pre class="typed current-section" id="current"></pre>
-        
-        <!-- Trading Chart Section -->
-        <div class="trading-section" id="tradingSection" style="display: none;">
-          <canvas id="depthChart"></canvas>
-          <div class="trading-buttons">
-            <button class="btn-buy" id="buyBtn">MARKET BUY</button>
-            <button class="btn-sell" id="sellBtn">MARKET SELL</button>
-          </div>
-        </div>
-        
-        <pre class="typed contact-section" id="contact" style="display: none;"></pre>
-        
-        <div class="kelly-formula" id="formula">
-          <span class="formula-text">f* = (p × b - q) / b</span>
-        </div>
+
+```
+    <!-- Trading Chart Section -->
+    <div class="trading-section" id="tradingSection" style="display: none;">
+      <canvas id="depthChart"></canvas>
+      <div class="trading-buttons">
+        <button class="btn-buy" id="buyBtn">MARKET BUY</button>
+        <button class="btn-sell" id="sellBtn">MARKET SELL</button>
       </div>
     </div>
+    
+    <pre class="typed contact-section" id="contact" style="display: none;"></pre>
+    
+    <div class="kelly-formula" id="formula">
+      <span class="formula-text">f* = (p × b - q) / b</span>
+    </div>
+  </div>
+</div>
+```
+
   </div>
 
   <!-- Music Control -->
+
   <div class="music-control" id="muteBtn">
     <button class="music-btn">🔊</button>
   </div>
 
   <!-- Three.js -->
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  
+
   <script>
+    // [JavaScript 程式碼保持不變 - 太長無法完整顯示，但保持原始功能]
+    // 這裡包含所有原始的 JavaScript 程式碼
+    // 包括 3D Matrix 效果、打字效果、音效系統、交易圖表等
+    
     // Check if mobile device to optimize performance
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
@@ -631,12 +814,12 @@
     const canvas = document.getElementById('matrix-canvas');
     const renderer = new THREE.WebGLRenderer({ 
       canvas: canvas,
-      antialias: !isMobile, // Disable antialiasing on mobile for better performance
+      antialias: !isMobile,
       alpha: false,
-      powerPreference: "low-power" // Use low power mode for mobile devices
+      powerPreference: "low-power"
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1 : 2)); // Limit pixel ratio on mobile
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1 : 2));
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
@@ -673,7 +856,7 @@
       return texture;
     }
 
-    // Matrix columns - reduce for mobile performance to prevent reload loops
+    // Matrix columns - reduce for mobile performance
     const columns = isMobile ? 30 : 80;
     const rows = isMobile ? 15 : 30;
     const spacing = 1.5;
@@ -690,7 +873,6 @@
         const char = charArray[Math.floor(Math.random() * charArray.length)];
         const geometry = new THREE.PlaneGeometry(1, 1);
         
-        // Create material with glow effect
         const material = new THREE.MeshBasicMaterial({
           map: createTextTexture(char),
           transparent: true,
@@ -702,7 +884,6 @@
         const mesh = new THREE.Mesh(geometry, material);
         mesh.position.set(x, (row - rows/2) * spacing, Math.random() * 10 - 5);
         
-        // Store additional properties
         mesh.userData = {
           originalY: mesh.position.y,
           speed: 0.1 + Math.random() * 0.3,
@@ -720,12 +901,10 @@
 
     scene.add(matrixGroup);
 
-    // Add bloom light effect
     const pointLight = new THREE.PointLight(0x00ff00, 0.5);
     pointLight.position.set(0, 0, 20);
     scene.add(pointLight);
 
-    // Animation variables
     let time = 0;
     const clock = new THREE.Clock();
 
@@ -734,67 +913,53 @@
     function animateMatrix() {
       requestAnimationFrame(animateMatrix);
       
-      // Skip frames on mobile to improve performance and prevent reload loops
       if (isMobile) {
         frameCount++;
-        if (frameCount % 2 !== 0) return; // Only render every other frame on mobile
+        if (frameCount % 2 !== 0) return;
       }
       
       const deltaTime = clock.getDelta();
       time += deltaTime;
 
-      // Animate each column
       matrixColumns.forEach((column, colIndex) => {
         column.forEach((mesh, rowIndex) => {
           const userData = mesh.userData;
           
-          // Create falling effect
           if (time > userData.delay * 0.1) {
             mesh.position.y -= userData.speed;
             
-            // Reset position when reaching bottom
             if (mesh.position.y < -rows/2 * spacing) {
               mesh.position.y = rows/2 * spacing;
-              // Change character
               const newChar = charArray[Math.floor(Math.random() * charArray.length)];
               mesh.material.map = createTextTexture(newChar);
               userData.char = newChar;
               userData.speed = 0.1 + Math.random() * 0.3;
             }
             
-            // Calculate opacity based on position (trail effect)
             const normalizedY = (mesh.position.y + rows/2 * spacing) / (rows * spacing);
             
-            // Head of the trail is bright
             if (rowIndex === 0 || (rowIndex < 3 && Math.random() > 0.5)) {
               mesh.material.opacity = 1;
               mesh.material.color = new THREE.Color(0xffffff);
             } else {
-              // Gradient fade
               mesh.material.opacity = normalizedY * 0.8;
               mesh.material.color = new THREE.Color(0x00ff00);
             }
             
-            // Add flicker effect
             if (Math.random() > 0.98) {
               mesh.material.opacity = Math.random();
             }
           }
           
-          // Z-axis wave motion
           mesh.position.z = Math.sin(time * 2 + colIndex * 0.1) * 2;
-          
-          // Slight rotation
           mesh.rotation.z = Math.sin(time + colIndex * 0.1) * 0.05;
         });
       });
 
-      // Camera movement
       camera.position.x = Math.sin(time * 0.5) * 5;
       camera.position.y = Math.cos(time * 0.3) * 3;
       camera.lookAt(0, 0, 0);
 
-      // Rotate entire matrix group slightly
       matrixGroup.rotation.y = Math.sin(time * 0.2) * 0.1;
       
       renderer.render(scene, camera);
