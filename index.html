@@ -1117,16 +1117,13 @@
     function initModPlayer() {
       console.log('Initializing dual music system (SoundCloud + Web Audio fallback)');
       
-      // For desktop and Android: Use SoundCloud
-      if (!isMobile || /Android/i.test(navigator.userAgent)) {
-        initSoundCloudPlayer();
-      }
+      // Always initialize SoundCloud for all platforms
+      initSoundCloudPlayer();
       
-      // For iPhone/iPad: Use Web Audio API fallback due to Safari restrictions
+      // For iPhone/iPad: Also prepare Web Audio API fallback
       if (isMobile && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        console.log('iOS detected - using Web Audio API fallback for music');
-        // Create enhanced arcade music with Web Audio API
-        setTimeout(() => createEnhancedFallbackMusic(), 1000);
+        console.log('iOS detected - Web Audio API fallback ready if SoundCloud fails');
+        // Will be triggered if SoundCloud doesn't play
       }
     }
     
@@ -1166,17 +1163,37 @@
         
         widget.bind(SC.Widget.Events.READY, function() {
           console.log('SoundCloud widget ready');
-          widget.setVolume(35);
+          widget.setVolume(40); // Increased music volume
           window.scWidgetReady = true;
+          
+          // Store widget globally for easier access
+          window.soundCloudWidget = widget;
           
           // Try to play if user has interacted
           if (window.userHasInteracted && !isMuted) {
-            widget.play().then(() => {
-              console.log('SoundCloud playback started');
-              window.soundCloudPlaying = true;
-            }).catch(error => {
-              console.log('SoundCloud autoplay blocked:', error);
-            });
+            // Multiple attempts for better compatibility
+            const attemptPlay = () => {
+              widget.play().then(() => {
+                console.log('SoundCloud playback started');
+                window.soundCloudPlaying = true;
+              }).catch(error => {
+                console.log('SoundCloud play attempt failed:', error);
+                // Retry after a short delay
+                setTimeout(() => {
+                  widget.play().catch(e => {
+                    console.log('SoundCloud retry failed:', e);
+                    // If Mac Safari, try iOS fallback
+                    if (/Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent)) {
+                      console.log('Safari detected, trying fallback music');
+                      createEnhancedFallbackMusic();
+                    }
+                  });
+                }, 500);
+              });
+            };
+            
+            // Initial attempt with small delay for Safari
+            setTimeout(attemptPlay, 100);
           }
         });
         
@@ -1271,9 +1288,9 @@
       }
     }
     
-    // Enhanced fallback music generator for iOS
+    // Enhanced fallback music generator for iOS - Ambient Trance / Epic Lounge style
     function createEnhancedFallbackMusic() {
-      console.log('Creating enhanced fallback music for iOS');
+      console.log('Creating Ambient Trance / Epic Lounge fallback music for iOS');
       
       if (!audioContext || !window.userHasInteracted) {
         // Retry later if not ready
@@ -1285,110 +1302,172 @@
       if (window.fallbackMusicInterval) {
         clearInterval(window.fallbackMusicInterval);
       }
+      if (window.fallbackMusicInterval2) {
+        clearInterval(window.fallbackMusicInterval2);
+      }
+      if (window.fallbackMusicInterval3) {
+        clearInterval(window.fallbackMusicInterval3);
+      }
       
-      // Amiga-style tracker pattern (similar to Luna track)
-      const pattern = [
-        { note: 130.81, duration: 0.2, volume: 0.12 }, // C3
-        { note: 0, duration: 0.1, volume: 0 }, // rest
-        { note: 164.81, duration: 0.2, volume: 0.10 }, // E3
-        { note: 196.00, duration: 0.3, volume: 0.11 }, // G3
-        { note: 0, duration: 0.1, volume: 0 }, // rest
-        { note: 261.63, duration: 0.2, volume: 0.12 }, // C4
-        { note: 196.00, duration: 0.2, volume: 0.10 }, // G3
-        { note: 164.81, duration: 0.3, volume: 0.11 }, // E3
+      // Ambient pad progression
+      let padIndex = 0;
+      let bassIndex = 0;
+      let leadIndex = 0;
+      let filterFreq = 800;
+      let filterDirection = 1;
+      
+      // Epic chord progression (Am - F - C - G)
+      const padChords = [
+        [220.00, 261.63, 329.63], // A3, C4, E4 (Am)
+        [174.61, 220.00, 261.63], // F3, A3, C4 (F)
+        [130.81, 164.81, 196.00], // C3, E3, G3 (C)
+        [196.00, 246.94, 293.66], // G3, B3, D4 (G)
       ];
       
-      let patternIndex = 0;
-      let bassIndex = 0;
+      // Deep trance bass line
+      const bassNotes = [55.00, 43.65, 32.70, 49.00]; // A1, F1, C1, G1
       
-      // Bass line
-      const bassNotes = [65.41, 82.41, 98.00, 82.41]; // C2, E2, G2, E2
-      
-      function playPattern() {
+      // Play ambient pads (slow, evolving)
+      function playPads() {
         if (isMuted || !window.userHasInteracted) return;
         
-        const currentNote = pattern[patternIndex];
+        const currentChord = padChords[padIndex];
         
-        // Play main melody
-        if (currentNote.note > 0) {
+        // Create lush pad sound with multiple oscillators
+        currentChord.forEach((freq, i) => {
+          // Main oscillator
           const osc = audioContext.createOscillator();
-          const envelope = audioContext.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          
+          // Detune oscillator for width
+          const osc2 = audioContext.createOscillator();
+          osc2.type = 'triangle';
+          osc2.frequency.value = freq * 1.007; // Slight detune for chorus effect
+          
+          // Filter for warmth
           const filter = audioContext.createBiquadFilter();
-          
-          // Amiga-style sound
-          osc.type = 'sawtooth';
-          osc.frequency.value = currentNote.note;
-          
-          // Filter for retro sound
           filter.type = 'lowpass';
-          filter.frequency.value = 2000;
-          filter.Q.value = 5;
+          filter.frequency.value = filterFreq;
+          filter.Q.value = 2;
           
+          // Envelope
+          const envelope = audioContext.createGain();
           envelope.gain.setValueAtTime(0, audioContext.currentTime);
-          envelope.gain.linearRampToValueAtTime(currentNote.volume, audioContext.currentTime + 0.01);
-          envelope.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + currentNote.duration);
+          envelope.gain.linearRampToValueAtTime(0.04, audioContext.currentTime + 2); // Slow attack
+          envelope.gain.setValueAtTime(0.04, audioContext.currentTime + 4);
+          envelope.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 8); // Long release
           
+          // Connect
           osc.connect(filter);
+          osc2.connect(filter);
           filter.connect(envelope);
           envelope.connect(audioContext.destination);
           
+          // Start
           osc.start(audioContext.currentTime);
-          osc.stop(audioContext.currentTime + currentNote.duration);
+          osc.stop(audioContext.currentTime + 8);
+          osc2.start(audioContext.currentTime);
+          osc2.stop(audioContext.currentTime + 8);
+        });
+        
+        // Update filter sweep
+        filterFreq += filterDirection * 50;
+        if (filterFreq > 2000 || filterFreq < 400) {
+          filterDirection *= -1;
         }
         
-        // Play bass every 4 beats
-        if (patternIndex % 2 === 0) {
-          const bassOsc = audioContext.createOscillator();
-          const bassEnv = audioContext.createGain();
-          
-          bassOsc.type = 'triangle';
-          bassOsc.frequency.value = bassNotes[bassIndex];
-          
-          bassEnv.gain.setValueAtTime(0, audioContext.currentTime);
-          bassEnv.gain.linearRampToValueAtTime(0.08, audioContext.currentTime + 0.02);
-          bassEnv.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
-          
-          bassOsc.connect(bassEnv);
-          bassEnv.connect(audioContext.destination);
-          
-          bassOsc.start(audioContext.currentTime);
-          bassOsc.stop(audioContext.currentTime + 0.4);
-          
-          bassIndex = (bassIndex + 1) % bassNotes.length;
-        }
-        
-        // Add occasional hi-hat
-        if (Math.random() > 0.7) {
-          const noise = audioContext.createBufferSource();
-          const noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate * 0.02, audioContext.sampleRate);
-          const data = noiseBuffer.getChannelData(0);
-          
-          for (let i = 0; i < data.length; i++) {
-            data[i] = Math.random() * 2 - 1;
-          }
-          
-          noise.buffer = noiseBuffer;
-          
-          const hihatFilter = audioContext.createBiquadFilter();
-          hihatFilter.type = 'highpass';
-          hihatFilter.frequency.value = 8000;
-          
-          const hihatEnv = audioContext.createGain();
-          hihatEnv.gain.setValueAtTime(0.03, audioContext.currentTime);
-          hihatEnv.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.02);
-          
-          noise.connect(hihatFilter);
-          hihatFilter.connect(hihatEnv);
-          hihatEnv.connect(audioContext.destination);
-          
-          noise.start(audioContext.currentTime);
-        }
-        
-        patternIndex = (patternIndex + 1) % pattern.length;
+        padIndex = (padIndex + 1) % padChords.length;
       }
       
-      // Play pattern at 140 BPM (Amiga tracker tempo)
-      window.fallbackMusicInterval = setInterval(playPattern, 214); // 60000/140/2
+      // Deep trance bass
+      function playBass() {
+        if (isMuted || !window.userHasInteracted) return;
+        
+        const bassOsc = audioContext.createOscillator();
+        bassOsc.type = 'sine';
+        bassOsc.frequency.value = bassNotes[bassIndex];
+        
+        // Sub bass layer
+        const subOsc = audioContext.createOscillator();
+        subOsc.type = 'sine';
+        subOsc.frequency.value = bassNotes[bassIndex] / 2; // Octave lower
+        
+        const bassEnv = audioContext.createGain();
+        bassEnv.gain.setValueAtTime(0, audioContext.currentTime);
+        bassEnv.gain.linearRampToValueAtTime(0.12, audioContext.currentTime + 0.01);
+        bassEnv.gain.setValueAtTime(0.12, audioContext.currentTime + 0.2);
+        bassEnv.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+        
+        const subEnv = audioContext.createGain();
+        subEnv.gain.value = 0.08;
+        
+        bassOsc.connect(bassEnv);
+        subOsc.connect(subEnv);
+        bassEnv.connect(audioContext.destination);
+        subEnv.connect(audioContext.destination);
+        
+        bassOsc.start(audioContext.currentTime);
+        bassOsc.stop(audioContext.currentTime + 0.5);
+        subOsc.start(audioContext.currentTime);
+        subOsc.stop(audioContext.currentTime + 0.5);
+        
+        bassIndex = (bassIndex + 1) % bassNotes.length;
+      }
+      
+      // Epic lead melody (sparse, ethereal)
+      function playLead() {
+        if (isMuted || !window.userHasInteracted) return;
+        
+        // Pentatonic scale for dreamy melody
+        const leadNotes = [440.00, 493.88, 587.33, 659.25, 783.99, 880.00]; // A4 pentatonic
+        const note = leadNotes[Math.floor(Math.random() * leadNotes.length)];
+        
+        // Only play occasionally for ambient feel
+        if (Math.random() > 0.6) {
+          const leadOsc = audioContext.createOscillator();
+          leadOsc.type = 'sine';
+          leadOsc.frequency.value = note;
+          
+          // Reverb-like delay
+          const delay = audioContext.createDelay(0.5);
+          delay.delayTime.value = 0.3;
+          
+          const feedback = audioContext.createGain();
+          feedback.gain.value = 0.4;
+          
+          const leadFilter = audioContext.createBiquadFilter();
+          leadFilter.type = 'bandpass';
+          leadFilter.frequency.value = 1000;
+          leadFilter.Q.value = 5;
+          
+          const leadEnv = audioContext.createGain();
+          leadEnv.gain.setValueAtTime(0, audioContext.currentTime);
+          leadEnv.gain.linearRampToValueAtTime(0.05, audioContext.currentTime + 0.1);
+          leadEnv.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 2);
+          
+          // Connect with delay/reverb
+          leadOsc.connect(leadFilter);
+          leadFilter.connect(leadEnv);
+          leadEnv.connect(audioContext.destination);
+          leadEnv.connect(delay);
+          delay.connect(feedback);
+          feedback.connect(delay);
+          delay.connect(audioContext.destination);
+          
+          leadOsc.start(audioContext.currentTime);
+          leadOsc.stop(audioContext.currentTime + 2);
+        }
+      }
+      
+      // Play at trance tempo (138 BPM)
+      window.fallbackMusicInterval = setInterval(playPads, 8000); // Pads every 8 seconds
+      window.fallbackMusicInterval2 = setInterval(playBass, 435); // Bass at 138 BPM
+      window.fallbackMusicInterval3 = setInterval(playLead, 1740); // Lead every 4 beats
+      
+      // Start immediately
+      playPads();
+      playBass();
       
       // Mark fallback music as active
       window.fallbackMusicActive = true;
@@ -1445,8 +1524,8 @@
       filter2.frequency.value = 5000;
       
       const gain = audioContext.createGain();
-      // Unified and slightly increased volume for both platforms
-      const baseVolume = 0.018; // Same for both mobile and desktop
+      // Significantly increased volume for typing sounds
+      const baseVolume = 0.06; // Much louder for better audibility
       gain.gain.setValueAtTime(baseVolume, audioContext.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.008);
       
@@ -1457,8 +1536,8 @@
       clickOsc.type = 'sine';
       clickOsc.frequency.value = 800 + Math.random() * 200; // Vary frequency slightly
       
-      // Unified click sound volume
-      const clickVolume = 0.025; // Same for both platforms, slightly increased
+      // Significantly increased click sound volume
+      const clickVolume = 0.08; // Much louder for better audibility
       clickGain.gain.setValueAtTime(clickVolume, audioContext.currentTime);
       clickGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.003);
       
@@ -1898,8 +1977,8 @@
           coinOsc.type = 'sine';
           coinOsc.frequency.setValueAtTime(2093, audioContext.currentTime);
           coinOsc.frequency.exponentialRampToValueAtTime(4186, audioContext.currentTime + 0.1);
-          // Unified coin sound volume, slightly increased
-          coinGain.gain.setValueAtTime(0.12, audioContext.currentTime); // Same for both platforms
+          // Increased coin sound volume
+          coinGain.gain.setValueAtTime(0.20, audioContext.currentTime); // Louder coin sound
           coinGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
           coinOsc.connect(coinGain);
           coinGain.connect(audioContext.destination);
@@ -1931,8 +2010,8 @@
           errorOsc.type = 'sawtooth';
           errorOsc.frequency.setValueAtTime(200, audioContext.currentTime);
           errorOsc.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.2);
-          // Unified error sound volume, slightly increased
-          errorGain.gain.setValueAtTime(0.12, audioContext.currentTime); // Same for both platforms
+          // Increased error sound volume
+          errorGain.gain.setValueAtTime(0.20, audioContext.currentTime); // Louder error sound
           errorGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
           errorOsc.connect(errorGain);
           errorGain.connect(audioContext.destination);
@@ -1961,6 +2040,12 @@
         if (window.fallbackMusicInterval) {
           clearInterval(window.fallbackMusicInterval);
           window.fallbackMusicActive = false;
+        }
+        if (window.fallbackMusicInterval2) {
+          clearInterval(window.fallbackMusicInterval2);
+        }
+        if (window.fallbackMusicInterval3) {
+          clearInterval(window.fallbackMusicInterval3);
         }
       } else {
         btn.textContent = '🔊';
