@@ -1113,19 +1113,91 @@
       });
     }
 
-    // Initialize music player - use HTML5 Audio with Web Audio API
+    // Initialize music player - dual system for better compatibility
     function initModPlayer() {
-      console.log('Initializing HTML5 Audio music player');
+      console.log('Initializing dual music system (SoundCloud + Web Audio fallback)');
+      
+      // For desktop and Android: Use SoundCloud
+      if (!isMobile || /Android/i.test(navigator.userAgent)) {
+        initSoundCloudPlayer();
+      }
+      
+      // For iPhone/iPad: Use Web Audio API fallback due to Safari restrictions
+      if (isMobile && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        console.log('iOS detected - using Web Audio API fallback for music');
+        // Create enhanced arcade music with Web Audio API
+        setTimeout(() => createEnhancedFallbackMusic(), 1000);
+      }
+    }
+    
+    // SoundCloud player initialization
+    function initSoundCloudPlayer() {
+      console.log('Initializing SoundCloud player');
+      
+      // Create SoundCloud iframe
+      const iframe = document.createElement('iframe');
+      iframe.width = '100%';
+      iframe.height = '166';
+      iframe.scrolling = 'no';
+      iframe.frameborder = 'no';
+      iframe.allow = 'autoplay';
+      // Use the Luna [COMMODORE AMIGA] track
+      iframe.src = 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/238369911&color=%2300ff00&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false&single_active=false&show_artwork=false';
+      
+      // Hide the iframe
+      iframe.style.position = 'fixed';
+      iframe.style.bottom = '-200px';
+      iframe.style.left = '0';
+      iframe.style.width = '1px';
+      iframe.style.height = '1px';
+      iframe.style.opacity = '0';
+      iframe.style.pointerEvents = 'none';
+      iframe.style.zIndex = '-9999';
+      
+      document.body.appendChild(iframe);
+      window.soundCloudPlayer = iframe;
+      
+      // Load SoundCloud API
+      const script = document.createElement('script');
+      script.src = 'https://w.soundcloud.com/player/api.js';
+      script.onload = function() {
+        const widget = SC.Widget(iframe);
+        window.scWidget = widget;
+        
+        widget.bind(SC.Widget.Events.READY, function() {
+          console.log('SoundCloud widget ready');
+          widget.setVolume(35);
+          window.scWidgetReady = true;
+          
+          // Try to play if user has interacted
+          if (window.userHasInteracted && !isMuted) {
+            widget.play().then(() => {
+              console.log('SoundCloud playback started');
+              window.soundCloudPlaying = true;
+            }).catch(error => {
+              console.log('SoundCloud autoplay blocked:', error);
+            });
+          }
+        });
+        
+        // Loop the track
+        widget.bind(SC.Widget.Events.FINISH, function() {
+          widget.seekTo(0);
+          widget.play();
+        });
+      };
+      document.body.appendChild(script);
+    }
+    
+    // HTML5 Audio initialization (kept as backup)
+    function initHTML5Audio() {
+      console.log('Initializing HTML5 Audio as backup');
       
       // Create HTML5 Audio element
       backgroundMusic = new Audio();
       
-      // Use a royalty-free casino/arcade style track
-      // Using Pixabay cyberpunk music (free, no attribution required)
+      // Use a direct MP3 URL
       backgroundMusic.src = 'https://cdn.pixabay.com/audio/2022/03/24/audio_baf74f6bc9.mp3';
-      
-      // Alternative free music URLs if needed:
-      // backgroundMusic.src = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
       
       backgroundMusic.loop = true;
       backgroundMusic.preload = 'auto';
@@ -1199,40 +1271,132 @@
       }
     }
     
-    // Fallback music generator using Web Audio API
-    function createFallbackMusic() {
-      console.log('Creating fallback music with Web Audio API');
+    // Enhanced fallback music generator for iOS
+    function createEnhancedFallbackMusic() {
+      console.log('Creating enhanced fallback music for iOS');
       
-      if (!audioContext) return;
-      
-      // Create a simple arpeggiator pattern for casino/arcade feel
-      const notes = [130.81, 146.83, 164.81, 196.00, 220.00, 261.63]; // C3-C4 scale
-      let noteIndex = 0;
-      
-      function playNote() {
-        if (isMuted || !window.userHasInteracted) return;
-        
-        const osc = audioContext.createOscillator();
-        const envelope = audioContext.createGain();
-        
-        osc.type = 'square'; // 8-bit style
-        osc.frequency.value = notes[noteIndex];
-        
-        envelope.gain.setValueAtTime(0, audioContext.currentTime);
-        envelope.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.01);
-        envelope.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-        
-        osc.connect(envelope);
-        envelope.connect(audioContext.destination);
-        
-        osc.start(audioContext.currentTime);
-        osc.stop(audioContext.currentTime + 0.2);
-        
-        noteIndex = (noteIndex + 1) % notes.length;
+      if (!audioContext || !window.userHasInteracted) {
+        // Retry later if not ready
+        setTimeout(() => createEnhancedFallbackMusic(), 1000);
+        return;
       }
       
-      // Play arpeggio pattern
-      window.fallbackMusicInterval = setInterval(playNote, 200);
+      // Stop any existing fallback music
+      if (window.fallbackMusicInterval) {
+        clearInterval(window.fallbackMusicInterval);
+      }
+      
+      // Amiga-style tracker pattern (similar to Luna track)
+      const pattern = [
+        { note: 130.81, duration: 0.2, volume: 0.12 }, // C3
+        { note: 0, duration: 0.1, volume: 0 }, // rest
+        { note: 164.81, duration: 0.2, volume: 0.10 }, // E3
+        { note: 196.00, duration: 0.3, volume: 0.11 }, // G3
+        { note: 0, duration: 0.1, volume: 0 }, // rest
+        { note: 261.63, duration: 0.2, volume: 0.12 }, // C4
+        { note: 196.00, duration: 0.2, volume: 0.10 }, // G3
+        { note: 164.81, duration: 0.3, volume: 0.11 }, // E3
+      ];
+      
+      let patternIndex = 0;
+      let bassIndex = 0;
+      
+      // Bass line
+      const bassNotes = [65.41, 82.41, 98.00, 82.41]; // C2, E2, G2, E2
+      
+      function playPattern() {
+        if (isMuted || !window.userHasInteracted) return;
+        
+        const currentNote = pattern[patternIndex];
+        
+        // Play main melody
+        if (currentNote.note > 0) {
+          const osc = audioContext.createOscillator();
+          const envelope = audioContext.createGain();
+          const filter = audioContext.createBiquadFilter();
+          
+          // Amiga-style sound
+          osc.type = 'sawtooth';
+          osc.frequency.value = currentNote.note;
+          
+          // Filter for retro sound
+          filter.type = 'lowpass';
+          filter.frequency.value = 2000;
+          filter.Q.value = 5;
+          
+          envelope.gain.setValueAtTime(0, audioContext.currentTime);
+          envelope.gain.linearRampToValueAtTime(currentNote.volume, audioContext.currentTime + 0.01);
+          envelope.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + currentNote.duration);
+          
+          osc.connect(filter);
+          filter.connect(envelope);
+          envelope.connect(audioContext.destination);
+          
+          osc.start(audioContext.currentTime);
+          osc.stop(audioContext.currentTime + currentNote.duration);
+        }
+        
+        // Play bass every 4 beats
+        if (patternIndex % 2 === 0) {
+          const bassOsc = audioContext.createOscillator();
+          const bassEnv = audioContext.createGain();
+          
+          bassOsc.type = 'triangle';
+          bassOsc.frequency.value = bassNotes[bassIndex];
+          
+          bassEnv.gain.setValueAtTime(0, audioContext.currentTime);
+          bassEnv.gain.linearRampToValueAtTime(0.08, audioContext.currentTime + 0.02);
+          bassEnv.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
+          
+          bassOsc.connect(bassEnv);
+          bassEnv.connect(audioContext.destination);
+          
+          bassOsc.start(audioContext.currentTime);
+          bassOsc.stop(audioContext.currentTime + 0.4);
+          
+          bassIndex = (bassIndex + 1) % bassNotes.length;
+        }
+        
+        // Add occasional hi-hat
+        if (Math.random() > 0.7) {
+          const noise = audioContext.createBufferSource();
+          const noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate * 0.02, audioContext.sampleRate);
+          const data = noiseBuffer.getChannelData(0);
+          
+          for (let i = 0; i < data.length; i++) {
+            data[i] = Math.random() * 2 - 1;
+          }
+          
+          noise.buffer = noiseBuffer;
+          
+          const hihatFilter = audioContext.createBiquadFilter();
+          hihatFilter.type = 'highpass';
+          hihatFilter.frequency.value = 8000;
+          
+          const hihatEnv = audioContext.createGain();
+          hihatEnv.gain.setValueAtTime(0.03, audioContext.currentTime);
+          hihatEnv.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.02);
+          
+          noise.connect(hihatFilter);
+          hihatFilter.connect(hihatEnv);
+          hihatEnv.connect(audioContext.destination);
+          
+          noise.start(audioContext.currentTime);
+        }
+        
+        patternIndex = (patternIndex + 1) % pattern.length;
+      }
+      
+      // Play pattern at 140 BPM (Amiga tracker tempo)
+      window.fallbackMusicInterval = setInterval(playPattern, 214); // 60000/140/2
+      
+      // Mark fallback music as active
+      window.fallbackMusicActive = true;
+    }
+    
+    // Original simple fallback (kept for compatibility)
+    function createFallbackMusic() {
+      createEnhancedFallbackMusic();
     }
 
     // Typing sound effect - realistic keyboard press
@@ -1785,22 +1949,34 @@
       
       if (isMuted) {
         btn.textContent = '🔇';
-        // Pause HTML5 Audio
+        // Pause SoundCloud
+        if (window.scWidget) {
+          window.scWidget.pause();
+        }
+        // Pause HTML5 Audio if exists
         if (backgroundMusic) {
           backgroundMusic.pause();
         }
         // Stop fallback music if running
         if (window.fallbackMusicInterval) {
           clearInterval(window.fallbackMusicInterval);
+          window.fallbackMusicActive = false;
         }
       } else {
         btn.textContent = '🔊';
-        // Resume HTML5 Audio
+        // Resume SoundCloud
+        if (window.scWidget && window.scWidgetReady) {
+          window.scWidget.play().catch(err => {
+            console.log('SoundCloud resume failed:', err);
+          });
+        }
+        // Resume HTML5 Audio if exists
         if (backgroundMusic) {
           playBackgroundMusic();
-        } else if (window.fallbackMusicInterval === undefined && audioContext) {
-          // Restart fallback music if it was the fallback being used
-          createFallbackMusic();
+        }
+        // Restart fallback music for iOS
+        if (isMobile && /iPhone|iPad|iPod/i.test(navigator.userAgent) && !window.fallbackMusicActive) {
+          createEnhancedFallbackMusic();
         }
       }
     });
@@ -1846,9 +2022,24 @@
           }
           
           // Start music playback
-          if ((window.pendingMusicPlay || window.musicReady) && !isMuted) {
-            console.log('Starting music playback after user interaction');
-            playBackgroundMusic();
+          if (!isMuted) {
+            // Try SoundCloud first
+            if (window.scWidget && window.scWidgetReady) {
+              console.log('Starting SoundCloud playback after user interaction');
+              window.scWidget.play().catch(err => {
+                console.log('SoundCloud play failed:', err);
+              });
+            }
+            // Try HTML5 Audio if available
+            if (window.musicReady && backgroundMusic) {
+              console.log('Starting HTML5 Audio playback');
+              playBackgroundMusic();
+            }
+            // Start iOS fallback if needed
+            if (isMobile && /iPhone|iPad|iPod/i.test(navigator.userAgent) && !window.fallbackMusicActive) {
+              console.log('Starting iOS fallback music');
+              createEnhancedFallbackMusic();
+            }
           }
           
           // Hide overlay
@@ -1897,10 +2088,28 @@
         });
       }
       
-      // Try to play HTML5 Audio music - works better on mobile
-      if ((window.pendingMusicPlay || window.musicReady) && backgroundMusic && !isMuted) {
-        console.log('Attempting to start music from user interaction...');
-        playBackgroundMusic();
+      // Try to play music - dual system approach
+      if (!isMuted) {
+        // Try SoundCloud
+        if (window.scWidget && window.scWidgetReady) {
+          window.scWidget.play().then(() => {
+            console.log('SoundCloud started from interaction');
+          }).catch(err => {
+            console.log('SoundCloud play failed:', err);
+            // Try iOS fallback on failure
+            if (isMobile && /iPhone|iPad|iPod/i.test(navigator.userAgent) && !window.fallbackMusicActive) {
+              createEnhancedFallbackMusic();
+            }
+          });
+        }
+        // Try HTML5 Audio
+        if (backgroundMusic && window.musicReady) {
+          playBackgroundMusic();
+        }
+        // iOS fallback
+        if (isMobile && /iPhone|iPad|iPod/i.test(navigator.userAgent) && !window.fallbackMusicActive && !window.scWidget) {
+          createEnhancedFallbackMusic();
+        }
       }
     };
     
