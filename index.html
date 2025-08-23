@@ -830,7 +830,7 @@
   <div class="start-overlay" id="startOverlay" style="display: none;">
     <div class="start-text">
       [ CLICK TO ENTER ]
-      <small>Enable sound for full experience</small>
+      <small>Enable sound for full experience<br>Safari users: Click anywhere if no sound</small>
     </div>
   </div>
 
@@ -1095,12 +1095,22 @@
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
       isAudioInitialized = true;
       
+      // Safari needs special handling
+      if (window.isSafariBrowser) {
+        console.log('Safari detected - implementing special audio initialization');
+        
+        // For Safari, we must wait for user gesture
+        if (audioContext.state === 'suspended') {
+          console.log('Safari AudioContext is suspended - will resume on user interaction');
+          // Don't try to resume here, wait for actual user click
+        }
+      }
+      
       // Check autoplay support and initialize music
       checkAutoplaySupport().then(canAutoplay => {
         console.log('Autoplay supported:', canAutoplay);
-        if (canAutoplay) {
-          window.userHasInteracted = true; // Desktop browsers typically allow autoplay
-          // Also ensure audioContext is ready for typing sounds on desktop
+        if (canAutoplay && !window.isSafariBrowser) {
+          window.userHasInteracted = true;
           if (audioContext && audioContext.state === 'suspended') {
             audioContext.resume().then(() => {
               console.log('AudioContext resumed for desktop autoplay');
@@ -1303,11 +1313,24 @@
     
     // Enhanced fallback music generator for iOS - Ambient Trance / Epic Lounge style
     function createEnhancedFallbackMusic() {
-      console.log('Creating Ambient Trance / Epic Lounge fallback music for iOS');
+      console.log('Creating Ambient Trance / Epic Lounge fallback music');
       
       if (!audioContext || !window.userHasInteracted) {
         // Retry later if not ready
+        console.log('AudioContext not ready, retrying in 1 second...');
         setTimeout(() => createEnhancedFallbackMusic(), 1000);
+        return;
+      }
+      
+      // Ensure AudioContext is running
+      if (audioContext.state === 'suspended') {
+        console.log('AudioContext is suspended, attempting to resume...');
+        audioContext.resume().then(() => {
+          console.log('AudioContext resumed, starting music');
+          createEnhancedFallbackMusic(); // Retry after resume
+        }).catch(err => {
+          console.error('Failed to resume AudioContext:', err);
+        });
         return;
       }
       
@@ -1651,21 +1674,26 @@
     function deleteAndRetype(element, wrongText, correctText, cursor, callback) {
       let i = wrongText.length;
       
-      // Delete phase
+      // Delete phase with cursor
       function deleteChar() {
         if (i > 0) {
           element.textContent = wrongText.substring(0, i - 1);
+          element.appendChild(cursor); // Keep cursor at the end
           playTypingSound();
           i--;
           setTimeout(deleteChar, 50);
         } else {
           // Start typing correct text with special handling for "loser"
-          element.innerHTML = ''; // Clear and use innerHTML for styling
+          element.innerHTML = ''; // Clear for styling
+          element.appendChild(cursor); // Add cursor back
           let j = 0;
           let displayText = '';
           
           function typeCorrect() {
             if (j < correctText.length) {
+              // Remove cursor before updating
+              if (cursor.parentNode) cursor.remove();
+              
               // Check if we're at the word "loser"
               if (correctText.substring(j).startsWith('loser')) {
                 // Type "loser" character by character first
@@ -1674,16 +1702,21 @@
                   if (j < loserStart + 5) {
                     displayText += correctText.charAt(j);
                     element.innerHTML = displayText;
+                    element.appendChild(cursor); // Add cursor after content
                     playTypingSound();
                     j++;
                     setTimeout(typeLoser, 60);
                   } else {
                     // After "loser" is typed, add strikethrough and continue
                     setTimeout(() => {
+                      // Remove cursor before updating
+                      if (cursor.parentNode) cursor.remove();
+                      
                       // Replace "loser" with strikethrough version
                       displayText = displayText.substring(0, displayText.length - 5) + 
                                    '<span style="text-decoration: line-through; opacity: 0.6;">loser</span>';
                       element.innerHTML = displayText;
+                      element.appendChild(cursor); // Add cursor back
                       
                       // Continue typing " dreamer"
                       setTimeout(() => {
@@ -1698,13 +1731,15 @@
                 const char = correctText.charAt(j);
                 displayText += char;
                 element.innerHTML = displayText;
+                element.appendChild(cursor); // Add cursor after content
                 playTypingSound();
                 j++;
                 setTimeout(typeCorrect, 60 + (Math.random() - 0.5) * 30);
               }
             } else {
+              // Finished typing
               setTimeout(() => {
-                cursor.remove();
+                if (cursor.parentNode) cursor.remove();
                 if (callback) callback();
               }, 500);
             }
@@ -2115,8 +2150,28 @@
           
           // Initialize audio
           initAudioSystem();
+          
+          // Safari needs explicit resume on user gesture
           if (audioContext) {
-            audioContext.resume();
+            console.log('Attempting to resume AudioContext...');
+            audioContext.resume().then(() => {
+              console.log('AudioContext successfully resumed! State:', audioContext.state);
+              
+              // For Safari, ensure we can actually play sounds
+              if (window.isSafariBrowser) {
+                // Play a silent sound to unlock audio
+                const silentOsc = audioContext.createOscillator();
+                const silentGain = audioContext.createGain();
+                silentGain.gain.value = 0.001; // Nearly silent
+                silentOsc.connect(silentGain);
+                silentGain.connect(audioContext.destination);
+                silentOsc.start(audioContext.currentTime);
+                silentOsc.stop(audioContext.currentTime + 0.01);
+                console.log('Safari: Silent sound played to unlock audio');
+              }
+            }).catch(err => {
+              console.error('Failed to resume AudioContext:', err);
+            });
           }
           
           // Start music playback
@@ -2197,13 +2252,28 @@
         initAudioSystem();
       }
       
-      // Resume AudioContext if suspended
+      // Resume AudioContext if suspended - critical for Safari
       if (audioContext && audioContext.state === 'suspended') {
+        console.log('AudioContext is suspended, resuming...');
         audioContext.resume().then(() => {
-          console.log('AudioContext resumed from user interaction');
+          console.log('AudioContext resumed from user interaction! State:', audioContext.state);
+          
+          // Safari: Play silent sound to ensure audio is truly unlocked
+          if (window.isSafariBrowser) {
+            const testOsc = audioContext.createOscillator();
+            const testGain = audioContext.createGain();
+            testGain.gain.value = 0.001;
+            testOsc.connect(testGain);
+            testGain.connect(audioContext.destination);
+            testOsc.start(audioContext.currentTime);
+            testOsc.stop(audioContext.currentTime + 0.01);
+            console.log('Safari: Audio unlock test completed');
+          }
         }).catch(err => {
-          console.log('AudioContext resume failed:', err);
+          console.error('AudioContext resume failed:', err);
         });
+      } else if (audioContext) {
+        console.log('AudioContext state:', audioContext.state);
       }
       
       // Try to play music
