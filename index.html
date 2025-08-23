@@ -1120,10 +1120,12 @@
       // Always initialize SoundCloud for all platforms
       initSoundCloudPlayer();
       
-      // For iPhone/iPad: Also prepare Web Audio API fallback
-      if (isMobile && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        console.log('iOS detected - Web Audio API fallback ready if SoundCloud fails');
-        // Will be triggered if SoundCloud doesn't play
+      // For Safari (both Mac and iOS): Prepare Web Audio API fallback
+      const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+      if (isSafari) {
+        console.log('Safari detected - Web Audio API fallback ready if SoundCloud fails');
+        // Store Safari detection globally
+        window.isSafariBrowser = true;
       }
     }
     
@@ -1169,31 +1171,30 @@
           // Store widget globally for easier access
           window.soundCloudWidget = widget;
           
-          // Try to play if user has interacted
+          // Mark as pending play for Safari
+          window.pendingSoundCloudPlay = true;
+          
+          // Try to play if user has interacted (but Safari often blocks this)
           if (window.userHasInteracted && !isMuted) {
-            // Multiple attempts for better compatibility
-            const attemptPlay = () => {
-              widget.play().then(() => {
-                console.log('SoundCloud playback started');
-                window.soundCloudPlaying = true;
-              }).catch(error => {
-                console.log('SoundCloud play attempt failed:', error);
-                // Retry after a short delay
-                setTimeout(() => {
-                  widget.play().catch(e => {
-                    console.log('SoundCloud retry failed:', e);
-                    // If Mac Safari, try iOS fallback
-                    if (/Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent)) {
-                      console.log('Safari detected, trying fallback music');
-                      createEnhancedFallbackMusic();
-                    }
-                  });
-                }, 500);
-              });
-            };
-            
-            // Initial attempt with small delay for Safari
-            setTimeout(attemptPlay, 100);
+            // For Safari, we need to wait for explicit user interaction
+            if (window.isSafariBrowser) {
+              console.log('Safari detected - music will start on next user interaction');
+              // Don't attempt autoplay on Safari, wait for user action
+            } else {
+              // Non-Safari browsers can attempt autoplay
+              const attemptPlay = () => {
+                widget.play().then(() => {
+                  console.log('SoundCloud playback started');
+                  window.soundCloudPlaying = true;
+                  window.pendingSoundCloudPlay = false;
+                }).catch(error => {
+                  console.log('SoundCloud play attempt failed:', error);
+                  window.pendingSoundCloudPlay = true;
+                });
+              };
+              
+              setTimeout(attemptPlay, 100);
+            }
           }
         });
         
@@ -2108,18 +2109,43 @@
           
           // Start music playback
           if (!isMuted) {
-            // Try SoundCloud first
+            // Try SoundCloud with multiple attempts for Safari
             if (window.scWidget && window.scWidgetReady) {
               console.log('Starting SoundCloud playback after user interaction');
-              window.scWidget.play().catch(err => {
-                console.log('SoundCloud play failed:', err);
+              
+              // First attempt
+              window.scWidget.play().then(() => {
+                console.log('SoundCloud started successfully!');
+                window.pendingSoundCloudPlay = false;
+                window.soundCloudPlaying = true;
+              }).catch(err => {
+                console.log('SoundCloud first attempt failed:', err);
+                
+                // Second attempt with delay
+                setTimeout(() => {
+                  window.scWidget.play().then(() => {
+                    console.log('SoundCloud started on retry!');
+                    window.pendingSoundCloudPlay = false;
+                    window.soundCloudPlaying = true;
+                  }).catch(err2 => {
+                    console.log('SoundCloud second attempt failed:', err2);
+                    
+                    // If Safari and SoundCloud fails, use fallback
+                    if (window.isSafariBrowser && !window.fallbackMusicActive) {
+                      console.log('Safari: Starting Web Audio fallback');
+                      createEnhancedFallbackMusic();
+                    }
+                  });
+                }, 200);
               });
             }
+            
             // Try HTML5 Audio if available
             if (window.musicReady && backgroundMusic) {
               console.log('Starting HTML5 Audio playback');
               playBackgroundMusic();
             }
+            
             // Start iOS fallback if needed
             if (isMobile && /iPhone|iPad|iPod/i.test(navigator.userAgent) && !window.fallbackMusicActive) {
               console.log('Starting iOS fallback music');
@@ -2173,26 +2199,51 @@
         });
       }
       
-      // Try to play music - dual system approach
-      if (!isMuted) {
-        // Try SoundCloud
+      // Try to play music - dual system approach with Safari support
+      if (!isMuted && window.pendingSoundCloudPlay) {
+        // Try SoundCloud with aggressive retry for Safari
         if (window.scWidget && window.scWidgetReady) {
-          window.scWidget.play().then(() => {
-            console.log('SoundCloud started from interaction');
-          }).catch(err => {
-            console.log('SoundCloud play failed:', err);
-            // Try iOS fallback on failure
-            if (isMobile && /iPhone|iPad|iPod/i.test(navigator.userAgent) && !window.fallbackMusicActive) {
-              createEnhancedFallbackMusic();
-            }
-          });
+          console.log('Attempting SoundCloud play from user interaction');
+          
+          // Use Promise chain for better Safari compatibility
+          const playPromise = window.scWidget.play();
+          
+          if (playPromise && typeof playPromise.then === 'function') {
+            playPromise.then(() => {
+              console.log('SoundCloud started from interaction!');
+              window.pendingSoundCloudPlay = false;
+              window.soundCloudPlaying = true;
+            }).catch(err => {
+              console.log('SoundCloud play failed:', err);
+              
+              // Immediate retry for Safari
+              window.scWidget.play().then(() => {
+                console.log('SoundCloud started on immediate retry!');
+                window.pendingSoundCloudPlay = false;
+                window.soundCloudPlaying = true;
+              }).catch(err2 => {
+                console.log('SoundCloud retry also failed:', err2);
+                
+                // Fallback to Web Audio for Safari
+                if (window.isSafariBrowser && !window.fallbackMusicActive) {
+                  console.log('Safari: Falling back to Web Audio music');
+                  createEnhancedFallbackMusic();
+                }
+              });
+            });
+          } else {
+            // Old API fallback
+            window.scWidget.play();
+          }
         }
+        
         // Try HTML5 Audio
         if (backgroundMusic && window.musicReady) {
           playBackgroundMusic();
         }
-        // iOS fallback
-        if (isMobile && /iPhone|iPad|iPod/i.test(navigator.userAgent) && !window.fallbackMusicActive && !window.scWidget) {
+        
+        // iOS specific fallback
+        if (isMobile && /iPhone|iPad|iPod/i.test(navigator.userAgent) && !window.fallbackMusicActive && !window.soundCloudPlaying) {
           createEnhancedFallbackMusic();
         }
       }
