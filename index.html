@@ -893,6 +893,13 @@
     // Check if mobile device to optimize performance
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
+    // Detect Safari early for audio handling
+    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+    if (isSafari) {
+      window.isSafariBrowser = true;
+      console.log('Safari browser detected at initialization');
+    }
+    
     // 3D Matrix Rain Effect with Three.js
     const canvas = document.getElementById('matrix-canvas');
     const renderer = new THREE.WebGLRenderer({ 
@@ -2176,14 +2183,36 @@
           
           // Start music playback
           if (!isMuted) {
-            // For Mac Safari, directly start Web Audio music
-            if (window.useWebAudioMusic || (window.isSafariBrowser && !isMobile)) {
-              console.log('Starting Web Audio music for Safari');
-              if (!window.fallbackMusicActive) {
-                createEnhancedFallbackMusic();
+            // For Safari (both Mac and iOS), directly start Web Audio music
+            if (window.isSafariBrowser) {
+              console.log('Safari detected - starting Web Audio music immediately');
+              
+              // Ensure AudioContext is running before creating music
+              if (audioContext && audioContext.state === 'running') {
+                if (!window.fallbackMusicActive) {
+                  createEnhancedFallbackMusic();
+                  console.log('Safari: Web Audio music started');
+                }
+              } else {
+                console.log('Safari: AudioContext not running yet, will retry');
+                // Retry after a short delay
+                setTimeout(() => {
+                  if (audioContext && audioContext.state === 'running' && !window.fallbackMusicActive) {
+                    createEnhancedFallbackMusic();
+                    console.log('Safari: Web Audio music started on retry');
+                  }
+                }, 500);
+              }
+              
+              // Also try HTML5 Audio as backup
+              if (!backgroundMusic) {
+                initHTML5Audio();
+              }
+              if (backgroundMusic && window.musicReady) {
+                playBackgroundMusic();
               }
             } 
-            // Try SoundCloud for other browsers
+            // Non-Safari browsers use SoundCloud
             else if (window.scWidget && window.scWidgetReady) {
               console.log('Starting SoundCloud playback after user interaction');
               
@@ -2200,18 +2229,6 @@
                   createEnhancedFallbackMusic();
                 }
               });
-            }
-            
-            // Try HTML5 Audio if available
-            if (window.musicReady && backgroundMusic) {
-              console.log('Starting HTML5 Audio playback');
-              playBackgroundMusic();
-            }
-            
-            // Start iOS fallback if needed
-            if (isMobile && window.isSafariBrowser && !window.fallbackMusicActive) {
-              console.log('Starting iOS Safari fallback music');
-              createEnhancedFallbackMusic();
             }
           }
           
@@ -2278,14 +2295,33 @@
       
       // Try to play music
       if (!isMuted) {
-        // Mac Safari: Use Web Audio directly (ITP blocks SoundCloud)
-        if (window.useWebAudioMusic || (window.isSafariBrowser && !isMobile)) {
-          if (!window.fallbackMusicActive) {
-            console.log('Mac Safari: Starting Web Audio music');
+        // Safari: Ensure Web Audio music is playing
+        if (window.isSafariBrowser) {
+          console.log('Safari user interaction - checking music status');
+          
+          // Check if music is already playing
+          if (!window.fallbackMusicActive && audioContext && audioContext.state === 'running') {
+            console.log('Safari: Starting Web Audio music from user interaction');
             createEnhancedFallbackMusic();
+          } else if (audioContext && audioContext.state === 'suspended') {
+            // Try to resume and then start music
+            audioContext.resume().then(() => {
+              if (!window.fallbackMusicActive) {
+                createEnhancedFallbackMusic();
+                console.log('Safari: Music started after AudioContext resume');
+              }
+            });
+          }
+          
+          // Also ensure HTML5 Audio is ready
+          if (!backgroundMusic) {
+            initHTML5Audio();
+          }
+          if (backgroundMusic && window.musicReady) {
+            playBackgroundMusic();
           }
         }
-        // Other browsers: Try SoundCloud
+        // Non-Safari browsers: Try SoundCloud
         else if (window.pendingSoundCloudPlay && window.scWidget && window.scWidgetReady) {
           console.log('Attempting SoundCloud play from user interaction');
           
@@ -2302,16 +2338,6 @@
               createEnhancedFallbackMusic();
             }
           });
-        }
-        
-        // Try HTML5 Audio
-        if (backgroundMusic && window.musicReady) {
-          playBackgroundMusic();
-        }
-        
-        // iOS Safari fallback
-        if (isMobile && window.isSafariBrowser && !window.fallbackMusicActive) {
-          createEnhancedFallbackMusic();
         }
       }
     };
